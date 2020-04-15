@@ -1,0 +1,109 @@
+{{ define "content" }}
+
+<script>
+  var point = ["num"]; 
+  var num = 0
+</script>
+<style>
+  .fa {
+    font-size: 25px;
+    cursor: pointer;
+    user-select: none;
+  }
+  
+  .fa:hover {
+    color: darkblue;
+  }
+  </style>
+<h5>private thread</h5>
+<div id="starter"></div>
+<div class="panel panel-default">
+  <div class="panel-heading">
+    <div style="padding-top: 10px; padding-bottom: 10px; background-color: wheat" class="lead"><i class="fa fa-comments-o"></i>{{ .Topic }}
+    <div class="pull-right small">
+      Started by {{ .User.Name }} - {{ .CreatedAtDate }}
+      {{ $v := .Id }}
+    </div>  
+  </div>
+  </div>
+  </div>
+
+  <br>
+  {{ range .Posts }}
+  <div class="panel-heading" style="padding-top:10px;">   
+    <script>
+      num++
+      var strNum = ""
+      strNum = num.toString()
+      var identify = {{ .User.Name }}
+      point.push(identify);
+    </script>
+    
+    <a style="word-wrap: break-word; white-space: pre;" class="lead"><i class="fa fa-comment"></i>{{ .Body }}</a>
+    <div class="form-control" style="height: 45px;">
+      <div style="padding-top: 5px; position: absolute;">by <a id="num" class="element" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> - {{ .CreatedAtDate }} </div>
+      <iframe class="pull-right" sandbox="allow-top-navigation allow-scripts allow-forms" style="border:none;"  height="40px" width="200px" src="/likes?idlikes={{ .Id }}" name="iframe_a"></iframe>
+      <!-- <a  style="display: none;" href="/likes" class="fa fa-comments-o" target="iframe_a"></a> -->
+    </div>    
+  </div>
+  
+  {{ end }}    
+  
+ <!-- watch hidden name id tydata.PrepareLikedPosts(alsoid)data.PrepareLikedPosts(alsoid)pe  -->
+  <div class="panel panel-info">
+    <div class="panel-body">
+     <form role="form" action="/thread/post" method="post">
+       <div class="form-group">
+         <textarea class="form-control" name="body" id="body" placeholder="Write your reply here" rows="3"></textarea>
+         <input type="hidden" name="id" value="{{ .Id }}">
+         <br/>
+         <button class="btn btn-primary pull-right" type="submit">Reply</button>
+       </div>
+     </form>
+     </div>
+  </div>
+
+  <script>
+    var listNew = [];
+    listNew = document.getElementsByClassName("fa fa-comment");
+    for (var i=0; i< listNew.length; i++) {
+      var num = i + 1
+      listNew[i].setAttribute('onclick', 'myFunction2(\'' + num + '\')')
+    }
+
+    function myFunction(x) {
+      x.classList.toggle("fa-thumbs-down");
+      starterTag = document.getElementById("starter")
+      starterTag.value = num
+    }
+
+    function myFunction2(x) {
+      so = document.getElementById("body")
+      if (so.value == "") {
+      so.focus();
+      so.select();
+      
+      so.value = "hey " + point[x] + ",\n";
+      } else {
+        so.value = "";
+        myFunction2(x)
+      // so.value = "hey " + point + ",\n";
+      }
+    }
+      // document.get
+      console.log("HELLO")
+      let ws = new WebSocket('ws://localhost:8080/thread/read?id=21');
+
+ws.onopen = function(){
+  //Subscribe to the channel
+  ws.send(JSON.stringify({"command": "subscribe","identifier":"{\"channel\":\"ArticlesChannel\"}"}))
+}    
+ws.onclose = function() {
+  console.log("CLOSING WEBSOCKET")
+}
+  ws.onmessage = function(msg) {
+    console.log(JSON.parse(msg.data).message);
+  }
+    </script>
+
+{{ end }}

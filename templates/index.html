@@ -1,0 +1,90 @@
+{{ define "content" }}
+<style>
+  
+  .container1 {
+  overflow: hidden;
+}
+.filterDiv {
+  display: none;
+}
+.show {
+    display: block; 
+  }
+</style>
+<div id="myBtnContainer">
+  <button class="btn active" onclick="filterSelection('all')">Show all</button>
+  <button class="btn" onclick="filterSelection('Sports')">Sports</button>
+  <button class="btn" onclick="filterSelection('Movies')">Movies</button>
+  <button class="btn" onclick="filterSelection('Games')">Games</button>
+  <button class="btn" onclick="filterSelection('Other')">Other</button>
+</div>
+<p class="lead">
+  <a href="/thread/new">Start a thread</a> or join one below!
+</p>
+
+<div class="container1">
+{{ range . }}
+
+<div class="filterDiv {{ .Category }}">
+  {{ .Category }}
+  <br>
+  <div class="panel panel-default" style="border-bottom: solid 2px black;">
+    <div class="panel-heading">
+      <span class="lead"><i class="fa fa-comments-o"></i> {{ .Topic }}</span>
+    </div>
+    <div class="form-control">
+      <div class="pull-right">
+        <a href="/thread/read?id={{.Id }}">Read more</a>
+      </div>
+      <div class="small">Started by <a class="lead" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.</div>
+    </div>
+  </div>
+</div>
+{{ end }}
+</div>
+<script>
+  filterSelection("all")
+  function filterSelection(c) {
+    var x, i;
+    x = document.getElementsByClassName("filterDiv");
+    if (c == "all") c = "";
+    for (i = 0; i < x.length; i++) {
+      w3RemoveClass(x[i], "show");
+      if (x[i].className.indexOf(c) > -1) w3AddClass(x[i], "show");
+    }
+  }
+  
+  function w3AddClass(element, name) {
+    var i, arr1, arr2;
+    arr1 = element.className.split(" ");
+    arr2 = name.split(" ");
+    for (i = 0; i < arr2.length; i++) {
+      if (arr1.indexOf(arr2[i]) == -1) {element.className += " " + arr2[i];}
+    }
+  }
+  
+  function w3RemoveClass(element, name) {
+    var i, arr1, arr2;
+    arr1 = element.className.split(" ");
+    arr2 = name.split(" ");
+    for (i = 0; i < arr2.length; i++) {
+      while (arr1.indexOf(arr2[i]) > -1) {
+        arr1.splice(arr1.indexOf(arr2[i]), 1);     
+      }
+    }
+    element.className = arr1.join(" ");
+  }
+  
+  // Add active class to the current button (highlight it)
+  var btnContainer = document.getElementById("myBtnContainer");
+  var btns = btnContainer.getElementsByClassName("btn");
+  for (var i = 0; i < btns.length; i++) {
+    btns[i].addEventListener("click", function(){
+      var current = document.getElementsByClassName("active");
+      current[0].className = current[0].className.replace(" active", "");
+      this.className += " active";
+    });
+  }
+  </script>
+{{ end }}
+

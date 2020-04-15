@@ -1,0 +1,26 @@
+{{ define "posts" }}
+<br>
+
+
+<div class="row">
+<div class="col-sm-6"><h4>User Posts : </h4> <br>
+    {{ $v := (index . 0) }} {{ range $v.Cards }}
+    <!-- if statement for templates  -->
+    <div class="form-control"  style="height: auto; position: relative; max-width: 450px;">
+        <a class="small" href="/thread/read?id={{ .ThreadId }}">OPEN</a><a class="small"> thread created by: </a>{{ .User.Name }} - {{ .CreatedAtDate }}
+        <a  style="word-wrap: break-word; white-space:unset;"  class="small"><br>{{ .User.Name }}: {{ .Body }}</a>
+        <div class="pull">
+           
+    </div>
+    
+    </div>
+    {{ end }}
+</div>
+<div class="col-sm-6"><h4>Liked Posts : </h4><br>
+    
+</div> 
+</div>
+
+
+
+{{ end }}
