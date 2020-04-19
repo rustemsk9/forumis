@@ -359,3 +359,37 @@
 [ERROR] 2020/04/15 15:13:56 util.go:57: sql: no rows in result set Cannot create thread
 [ERROR] 2020/04/15 15:15:25 util.go:57: sql: no rows in result set Cannot create user
 [ERROR] 2020/04/15 15:15:29 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/15 21:23:23 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/15 22:16:16 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/15 22:16:16 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/04/15 22:16:26 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/15 22:16:26 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/04/15 22:18:14 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/15 22:18:14 util.go:57: sql: no rows in result set Cannot create thread
+[ERROR] 2020/04/15 22:18:41 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/15 22:18:50 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/15 22:18:50 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/04/15 22:19:08 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/15 22:19:08 util.go:57: sql: no rows in result set Cannot create thread
+[ERROR] 2020/04/15 22:20:28 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/15 22:41:41 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:03:27 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:05:04 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:11:29 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:11:49 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/16 16:11:49 util.go:57: sql: no rows in result set Cannot create thread
+[ERROR] 2020/04/16 16:11:57 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/16 16:11:57 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/04/16 16:27:54 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:29:43 util.go:57: sql: no rows in result set Cannot create user
+[ERROR] 2020/04/16 16:29:49 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:30:01 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/04/16 16:30:01 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/04/16 16:31:31 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:34:33 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:39:51 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:44:33 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:47:00 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:49:06 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:53:23 util.go:57: sql: no rows in result set Cannot find user
+[ERROR] 2020/04/16 16:57:06 util.go:57: sql: no rows in result set Cannot find user

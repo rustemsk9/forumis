@@ -15,7 +15,8 @@
     color: darkblue;
   }
   </style>
-<h5>private thread</h5>
+  <section style="margin-top: 20px;">
+<h5>private</h5>
 <div id="starter"></div>
 <div class="panel panel-default">
   <div class="panel-heading">
@@ -50,6 +51,8 @@
   {{ end }}    
   
  <!-- watch hidden name id tydata.PrepareLikedPosts(alsoid)data.PrepareLikedPosts(alsoid)pe  -->
+ <img width="950px" height="70px" src="/static/hipart2.png.svg">
+ 
   <div class="panel panel-info">
     <div class="panel-body">
      <form role="form" action="/thread/post" method="post">
@@ -105,5 +108,5 @@ ws.onclose = function() {
     console.log(JSON.parse(msg.data).message);
   }
     </script>
-
+</section>
 {{ end }}

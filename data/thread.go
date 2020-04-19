@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 	"time"
 )
 
@@ -46,7 +47,8 @@ func GetCookieValue(request *http.Request) int {
 	if err != nil {
 		fmt.Println("Error") // or redirect
 	}
-	alsoid, _ = strconv.Atoi(cook.Value)
+	cooPart := strings.Split(cook.Value, "&")
+	alsoid, _ = strconv.Atoi(cooPart[0])
 	return alsoid
 }
 
@@ -56,7 +58,7 @@ func GetLikes(postID int) (Li []Likes) {
 	if err != nil {
 		return
 	}
-	fmt.Print("after likes :")
+
 	// likesAll := []Likes{}
 	var likeLength int
 	for rows.Next() {
@@ -66,9 +68,7 @@ func GetLikes(postID int) (Li []Likes) {
 			return
 		}
 		Li = append(Li, likes)
-
 	}
-
 	for i := range Li {
 		Li[i].LengthOfLikes = likeLength - 1
 	}
@@ -81,8 +81,6 @@ func GetDislikes(postID int) (Di []Dislikes) {
 	if err != nil {
 		return
 	}
-	fmt.Print("after dislikes :")
-	// dislikesAll := []Dislikes{}
 	var dislikeLength int
 	for rows.Next() {
 		dislikes := Dislikes{}
@@ -224,7 +222,7 @@ func Threads() (threads []Thread, err error) {
 }
 
 func AccountThreads(alsoid int) (threads []Thread, err error) {
-	fmt.Println("Account Threads shown")
+	fmt.Println("Account Threads started DB search")
 	rows, err := Db.Query("SELECT Id, uuid, topic, user_id, created_at, category FROM threads WHERE user_id=?", alsoid)
 	if err != nil {
 		fmt.Println("Error on AccountThreads")
@@ -237,7 +235,6 @@ func AccountThreads(alsoid int) (threads []Thread, err error) {
 		return nil, err
 	}
 	for rows.Next() {
-		fmt.Println("Error on AccountThreads3")
 		th := Thread{}
 		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.UserId, &th.CreatedAt, &th.Category); err != nil {
 			return
@@ -250,6 +247,7 @@ func AccountThreads(alsoid int) (threads []Thread, err error) {
 
 // shows posts written by user
 func GetUserPosts(alsoid int) (posts []Post, err error) {
+	fmt.Println("GetUserPosts started DB search")
 	rows, err := Db.Query("SELECT Id, uuid, body, user_id, thread_id, created_at FROM posts WHERE user_id=?", alsoid)
 	if err != nil {
 		fmt.Println("Error on GetUserPosts")
@@ -267,9 +265,61 @@ func GetUserPosts(alsoid int) (posts []Post, err error) {
 }
 
 // shows liked posts in account profile
-// func GetUserLikedPosts(alsoid int) (posts []Post, err error) {
-// 	rows, err := Db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM likedposts WHERE user_id=?", alsoid)
-// }
+func GetUserLikedPosts(alsoid int) (likedPosts []int, err error) {
+	fmt.Println("GetUserLikedPosts started DB search")
+	rows, err := Db.Query("SELECT post_id FROM likedposts WHERE user_id=?", alsoid)
+	if err != nil {
+		fmt.Println("Error on GetUserLikedPosts")
+		return
+	}
+	defer rows.Close()
+	if !rows.Next() {
+		return nil, err
+	}
+
+	for rows.Next() {
+		post := 0
+		if err = rows.Scan(&post); err != nil {
+			return
+		}
+		likedPosts = append(likedPosts, post)
+	}
+	return
+}
+func GetFromLikedDB(allIds []int) (posts []Post, err error) {
+	str := "SELECT id, uuid, body, user_id, thread_id, created_at FROM posts WHERE "
+	for i, g := range allIds {
+		if i == len(allIds)-1 {
+			str += fmt.Sprintf("id=%d;", g)
+			break
+		}
+		str += fmt.Sprintf("id=%d OR ", g)
+	}
+	// fmt.Println(str)
+	rows, err := Db.Query(str)
+	// fmt.Println(rows)
+	if err != nil {
+		fmt.Println("Error on GetFromLikedDB")
+		return nil, err
+	}
+	if !rows.Next() {
+		fmt.Println("couldnt find any liked post")
+		return nil, err
+	}
+
+	for rows.Next() {
+		post := Post{}
+
+		if err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt); err != nil {
+			fmt.Println("error on Scan")
+			return
+		}
+
+		posts = append(posts, post)
+	}
+
+	return
+}
 
 // get a thread by the UUID
 func ThreadById(id int) (conv Thread, err error) {

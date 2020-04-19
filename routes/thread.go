@@ -8,6 +8,7 @@ import (
 	"log"
 	"net/http"
 	"strconv"
+	"strings"
 )
 
 func AccountCheck(writer http.ResponseWriter, request *http.Request) {
@@ -17,8 +18,8 @@ func AccountCheck(writer http.ResponseWriter, request *http.Request) {
 	if err != nil {
 		fmt.Println("Error") // or redirect
 	}
-
-	http.Redirect(writer, request, fmt.Sprintf("/account?user_id=%v", cook.Value), 302)
+	cooPart := strings.Split(cook.Value, "&")
+	http.Redirect(writer, request, fmt.Sprintf("/account?user_id=%v", cooPart[0]), 302)
 }
 
 // GET /threads/new
@@ -49,13 +50,7 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			utils.Danger(err, "Cannot get user from session")
 		}
-		var alsoid int
-		cook, err := request.Cookie("_cookie")
-		if err != nil {
-			fmt.Println("Error") // or redirect
-		}
-
-		alsoid, _ = strconv.Atoi(cook.Value)
+		alsoid := data.GetCookieValue(request)
 		topic := request.PostFormValue("topic")
 		if _, err := user.CreateThread(topic, alsoid, selected); err != nil {
 			utils.Danger(err, "Cannot create thread")
@@ -97,14 +92,19 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 	if thread == nil {
-		http.Redirect(writer, request, "/", 302)
+		utils.GenerateHTML(writer, &thread, "layout", "private.navbar", "justaccount")
+		// http.Redirect(writer, request, "/", 302)
 		return
 	}
 
 	posts, _ := data.GetUserPosts(URLIDConv)
-	// likedposts, _ := data.GetUserLikedPosts(URLIDConv)
+	likedposts, _ := data.GetUserLikedPosts(URLIDConv)
+
+	fmt.Println(likedposts)
+	getFinal, _ := data.GetFromLikedDB(likedposts)
 	thread[0].Cards = posts
-	// thread[0].LikedPosts = likedposts
+	fmt.Println(getFinal)
+	thread[0].LikedPosts = getFinal
 	filesFrom := []string{"layout", "private.navbar", "account", "accountbypost"}
 	var files []string
 	for _, file := range filesFrom {

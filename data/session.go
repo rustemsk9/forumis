@@ -3,12 +3,13 @@ package data
 import (
 	"errors"
 	"net/http"
+	"strings"
 	"time"
 )
 
 type Session struct {
 	Id        int
-	Uuid      string // 随机生成的唯一Id，会话机制的核心
+	Uuid      string
 	Email     string
 	UserId    int
 	CreatedAt time.Time
@@ -16,7 +17,7 @@ type Session struct {
 
 // check if session is valid in the database
 func (session *Session) Valid() (valid bool, err error) {
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at FROM sessions WHERE uuid=?", session.Uuid).
+	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at FROM sessions WHERE user_id=?", session.UserId).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt)
 	if err != nil {
 		valid = false
@@ -30,13 +31,13 @@ func (session *Session) Valid() (valid bool, err error) {
 
 // delete session from database
 func (session *Session) DeleteByUUID() (err error) {
-	stmt, err := Db.Prepare("DELETE FROM sessions WHERE user_id=?")
+	stmt, err := Db.Prepare("DELETE FROM sessions WHERE uuid=?")
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
-	_, err = stmt.Exec(session.UserId)
+	_, err = stmt.Exec(session.Uuid)
 	return
 }
 
@@ -58,7 +59,8 @@ func SessionDeleteAll() (err error) {
 func SessionCheck(writer http.ResponseWriter, request *http.Request) (sess Session, err error) {
 	cookie, err := request.Cookie("_cookie")
 	if err == nil {
-		sess = Session{Uuid: cookie.Value}
+		cooPart := strings.Split(cookie.Value, "&")
+		sess = Session{Uuid: cooPart[0]}
 		if ok, _ := sess.Valid(); ok {
 			err = errors.New("invalid session")
 		}

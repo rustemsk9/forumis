@@ -5,7 +5,7 @@ import (
 	"casual-talk/utils"
 	"fmt"
 	"net/http"
-	"strconv"
+	"strings"
 	"time"
 )
 
@@ -13,7 +13,15 @@ import (
 // show the login page
 func Login(writer http.ResponseWriter, request *http.Request) {
 	t := utils.ParseTemplateFiles("login.layout", "public.navbar", "login")
-	t.Execute(writer, nil)
+
+	// switch str {
+	// case "":
+	str := "Welcome to Forum"
+	// case "errormsg":
+	// 	str = "You entered either wrong login or wrong password"
+	// }
+
+	t.Execute(writer, str)
 }
 
 // GET /signup
@@ -45,7 +53,9 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	request.ParseForm()
 	user, err := data.UserByEmail(request.PostFormValue("email"))
+
 	if err != nil {
+		http.Redirect(writer, request, "/login", 302)
 		// http.Redirect()
 		// utils.Danger(err, "Cannot find user")
 		// http.Error(writer, err.Error(), http.StatusInternalServerError)
@@ -53,12 +63,13 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	}
 	if user.Password == data.Encrypt(request.PostFormValue("password")) {
 		_, err := user.CreateSession()
+		sess, err := user.Session()
 		if err != nil {
 			utils.Danger(err, "Cannot find user")
 		}
 		cookie := http.Cookie{
 			Name:     "_cookie",
-			Value:    fmt.Sprintf("%d", user.Id),
+			Value:    fmt.Sprintf("%d&%v", user.Id, sess.Uuid),
 			HttpOnly: true,
 		}
 		// main.Authenticate = true
@@ -73,17 +84,16 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 // logs the user out
 func Logout(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("_cookie")
-	ourID, _ := strconv.Atoi(cookie.Value)
+	cooPart := strings.Split(cookie.Value, "&")
+	fmt.Println(cooPart[1])
 	if err != http.ErrNoCookie {
-		session := data.Session{UserId: ourID}
+		session := data.Session{Uuid: cooPart[1]}
 		session.DeleteByUUID()
 		cookie.MaxAge = -1
 		cookie.Expires = time.Unix(1, 0)
 		http.SetCookie(writer, cookie)
-		fmt.Println("LOL1")
 	} else {
 		utils.Warn(err, "Failed to get cookie")
-		fmt.Println("LOL2")
 	}
 	http.Redirect(writer, request, "/", 302)
 }

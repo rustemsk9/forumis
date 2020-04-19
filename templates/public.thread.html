@@ -1,8 +1,8 @@
 {{ define "content" }}
 <h4>public</h4>
 <div class="panel panel-default">
-  <div class="panel-heading">
-    <span class="lead"> <i class="fa fa-comment-o"></i> {{ .Topic }}</span>
+  <div class="panel-heading" style="background-color: wheat">
+    <span  class="lead"> <i class="fa fa-comment-o"></i> {{ .Topic }}</span>
     <div class="pull-right">
       
       Started by {{ .User.Name }} - {{ .CreatedAtDate }}
@@ -11,12 +11,12 @@
   </div>
   
   {{ range .Posts }}
-  <div class="panel-body">
+  <p><div class="panel-body">
     <span class="lead"> <i class="fa fa-comment"></i> {{ .Body }}</span>
     <div class="pull-right">
      {{ .User.Name }} - {{ .CreatedAtDate }}
     </div>    
-  </div>
+  </div></p>
   {{ end }}    
 
 </div>
