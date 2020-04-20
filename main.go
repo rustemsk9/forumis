@@ -1,10 +1,10 @@
 package main
 
 import (
-	"casual-talk/routes"
-	"casual-talk/utils"
 	"encoding/json"
 	"fmt"
+	"forum/routes"
+	"forum/utils"
 	"net/http"
 	"os"
 	"time"

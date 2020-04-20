@@ -1,22 +1,68 @@
 {{ define "content" }}
+<style>
+  .container {
+    position: relative;
+    width: 100%;
+    
+    max-width: 600px;
+  }
+  
+  .container img {
+    position: absolute;
+    left:  -100px;
+  width: 100%;
+  height: auto;
+}
 
+.btn {
+  margin-top: 57px;
+  margin-left: 20px;
+}
+
+.btn2 {
+  background-color: transparent;
+  position: absolute;
+  margin-top: 57px;
+  margin-left: 95px;
+}
+  .container .btn, .btn2 {
+    transform: translate(-50%, -50%);
+    -ms-transform: translate(-50%, -50%);
+    /* background-color: greenyellow; */
+    color: black;
+    font-size: 26px;
+    padding: 12px 24px;
+    border: none;
+    cursor: pointer;
+    border-radius: 5px;
+    text-align: center;
+  }
+  
+  .container .btn:hover, .btn2:hover {
+    background-color: black;
+    color: greenyellow;
+  }
+  
+  </style>
 <form class="form-signin center" role="form" action="/authenticate" method="post">
   <h2 class="form-signin-heading">
     <i class="fa fa-comments-o">
       <a href="/">Forum Talk</a>
     </i>
   </h2>
+  <div class="container">
   <input type="email" name="email" class="form-control" placeholder="Email address" required autofocus>
   <input type="password" name="password" class="form-control" placeholder="Password" required>
-  <br/>
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Sign in</button>
-  <br/>
-  <a class="lead pull-right" href="/signup">Sign up</a>
+    <img style="width: 500px;" src="/static/computer2.png">
+    <!-- <img src="img_snow.jpg" alt="Snow" style="width:100%"> -->
+    <button class="btn" type="submit">{{ .Submit }}</button>
+    <!-- <button class="btn" href="/signup"></button> -->
+    <button class="btn2"><a href="/signup">{{ .Signup }}</a></button>
+    <!-- <button class="btn">Button</button> -->
+  </div>
+
 </form>
 
-<img style="margin-left:50px; position: absolute;" src="/static/computer2.png">
-<section>
-  <div style="margin-left:250px; margin-top:110px; position: absolute;">{{ . }}</div>
-</section>
+
 
 {{ end }}

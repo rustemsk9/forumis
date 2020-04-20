@@ -1,10 +1,12 @@
 {{ define "content" }}
 <h4> Account Info: </h4>
 
-    Name : {{ (index . 0).User.Name }} <br>
-    Email : {{ (index . 0).User.Email }} <br>
-    Created at : {{ $v := (index . 0).User }} {{ slice (print $v.CreatedAt) 0 16 }}
+    Name : {{ .Name }} <br>
+    Email : {{ .Email }} <br>
+    Created at : {{ slice (print .CreatedAt) 0 16 }}
+    
+    <div style="margin-top: 50px;"><h5>Threads were not found</h5></div>
 
-    <h4>Threads were not found</h4>
+    <div style="margin-top: 50px;"><h5>Posts and Likes were not found</h5></div>
     
 {{ end }}

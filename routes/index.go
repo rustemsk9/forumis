@@ -1,8 +1,8 @@
 package routes
 
 import (
-	"casual-talk/data"
-	"casual-talk/utils"
+	"forum/data"
+	"forum/utils"
 	"net/http"
 )
 

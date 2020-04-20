@@ -1,12 +1,12 @@
 package data
 
 import (
-	"casual-talk/utils"
 	"crypto/rand"
 	"crypto/sha1"
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"forum/utils"
 	"log"
 	"os"
 

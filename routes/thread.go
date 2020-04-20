@@ -1,9 +1,9 @@
 package routes
 
 import (
-	"casual-talk/data"
-	"casual-talk/utils"
 	"fmt"
+	"forum/data"
+	"forum/utils"
 	"html/template"
 	"log"
 	"net/http"
@@ -91,8 +91,10 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 		http.Redirect(writer, request, "/", 302)
 		return
 	}
+
+	userINFO := data.GetUserById(URLIDConv)
 	if thread == nil {
-		utils.GenerateHTML(writer, &thread, "layout", "private.navbar", "justaccount")
+		utils.GenerateHTML(writer, &userINFO, "layout", "private.navbar", "justaccount")
 		// http.Redirect(writer, request, "/", 302)
 		return
 	}
@@ -103,7 +105,7 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(likedposts)
 	getFinal, _ := data.GetFromLikedDB(likedposts)
 	thread[0].Cards = posts
-	fmt.Println(getFinal)
+	// fmt.Println(getFinal)
 	thread[0].LikedPosts = getFinal
 	filesFrom := []string{"layout", "private.navbar", "account", "accountbypost"}
 	var files []string
@@ -118,7 +120,7 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 
 // POST /likes
 func PostLike(writer http.ResponseWriter, request *http.Request) {
-	// fmt.Println("---------------------")
+	fmt.Println("Post Like procceses ")
 	LIKEDID := request.URL.Query().Get("idlikes")
 	postID2, _ := strconv.Atoi(LIKEDID)
 	// fmt.Println("also likes proccess started")
@@ -224,7 +226,7 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 			utils.Danger(err, "Cannot get user from session")
 		}
 		body := request.PostFormValue("body")
-		fmt.Println(body)
+		// fmt.Println(body)
 		id := request.PostFormValue("id")
 		resid, _ := strconv.Atoi(id)
 		thread, err := data.ThreadById(resid)

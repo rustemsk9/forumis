@@ -1,27 +1,29 @@
 package routes
 
 import (
-	"casual-talk/data"
-	"casual-talk/utils"
 	"fmt"
+	"forum/data"
+	"forum/utils"
 	"net/http"
 	"strings"
 	"time"
 )
 
+type LoginSkin struct {
+	Submit string
+	Signup string
+}
+
 // GET /login
 // show the login page
 func Login(writer http.ResponseWriter, request *http.Request) {
-	t := utils.ParseTemplateFiles("login.layout", "public.navbar", "login")
-
-	// switch str {
-	// case "":
-	str := "Welcome to Forum"
-	// case "errormsg":
-	// 	str = "You entered either wrong login or wrong password"
-	// }
-
-	t.Execute(writer, str)
+	// t := utils.ParseTemplateFiles("login.layout", "public.navbar", "login")
+	LS := LoginSkin{
+		"Submit",
+		"Signup",
+	}
+	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
+	// t.ExecuteTemplate(writer, LoginSkin)
 }
 
 // GET /signup
@@ -61,7 +63,13 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 		// http.Error(writer, err.Error(), http.StatusInternalServerError)
 		return
 	}
+
 	if user.Password == data.Encrypt(request.PostFormValue("password")) {
+		_, err = data.SessionCheck(writer, request)
+		if err == nil {
+			http.Redirect(writer, request, "/", 302)
+			return
+		}
 		_, err := user.CreateSession()
 		sess, err := user.Session()
 		if err != nil {
@@ -85,7 +93,7 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 func Logout(writer http.ResponseWriter, request *http.Request) {
 	cookie, err := request.Cookie("_cookie")
 	cooPart := strings.Split(cookie.Value, "&")
-	fmt.Println(cooPart[1])
+	// fmt.Println(cooPart[1])
 	if err != http.ErrNoCookie {
 		session := data.Session{Uuid: cooPart[1]}
 		session.DeleteByUUID()

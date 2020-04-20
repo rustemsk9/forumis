@@ -74,12 +74,6 @@
       listNew[i].setAttribute('onclick', 'myFunction2(\'' + num + '\')')
     }
 
-    function myFunction(x) {
-      x.classList.toggle("fa-thumbs-down");
-      starterTag = document.getElementById("starter")
-      starterTag.value = num
-    }
-
     function myFunction2(x) {
       so = document.getElementById("body")
       if (so.value == "") {
