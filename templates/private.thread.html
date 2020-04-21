@@ -57,7 +57,7 @@
     <div class="panel-body">
      <form role="form" action="/thread/post" method="post">
        <div class="form-group">
-         <textarea class="form-control" name="body" id="body" placeholder="Write your reply here" rows="3"></textarea>
+         <textarea maxlength="500" style="overflow-y: auto; resize: none;" class="form-control" name="body" id="body" placeholder="Write your reply here" rows="3"></textarea>
          <input type="hidden" name="id" value="{{ .Id }}">
          <br/>
          <button class="btn btn-primary pull-right" type="submit">Reply</button>
@@ -65,6 +65,9 @@
      </form>
      </div>
   </div>
+
+  $("textarea").resizable();
+  <script src="/static/js/jquery-3.4.1.min.js"></script>
 
   <script>
     var listNew = [];

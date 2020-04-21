@@ -12,17 +12,32 @@ import (
 type LoginSkin struct {
 	Submit string
 	Signup string
+
+	ErrorStr string
 }
 
 // GET /login
 // show the login page
+var ErrorStrC1 string
+
 func Login(writer http.ResponseWriter, request *http.Request) {
 	// t := utils.ParseTemplateFiles("login.layout", "public.navbar", "login")
-	LS := LoginSkin{
-		"Submit",
-		"Signup",
+	var LS LoginSkin
+	if ErrorStrC1 != "" {
+		LS = LoginSkin{
+			"Submit",
+			"Signup",
+			ErrorStrC1,
+		}
+	} else {
+		LS = LoginSkin{
+			"Submit",
+			"Signup",
+			"",
+		}
 	}
 	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
+	ErrorStrC1 = ""
 	// t.ExecuteTemplate(writer, LoginSkin)
 }
 
@@ -57,7 +72,9 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	user, err := data.UserByEmail(request.PostFormValue("email"))
 
 	if err != nil {
-		http.Redirect(writer, request, "/login", 302)
+		// http.Redirect(writer, request, "/login", 302)
+		ErrorStrC1 = "You might entered wrong email/password \n Try again"
+		Login(writer, request)
 		// http.Redirect()
 		// utils.Danger(err, "Cannot find user")
 		// http.Error(writer, err.Error(), http.StatusInternalServerError)
