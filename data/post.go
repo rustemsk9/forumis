@@ -13,15 +13,6 @@ type Post struct {
 	CreatedAt time.Time
 }
 
-func IsLiked(id int) {
-	// var alsoid int
-	// cook, err := request.Cookie("_cookie")
-	// if err != nil {
-	// 	fmt.Println("Error") // or redirect
-	// }
-	// return false
-}
-
 // format the CreatedAt date to display nicely on the screen
 func (post *Post) CreatedAtDate() string {
 	return post.CreatedAt.Format("Jan/2/2006 3:04pm")

@@ -210,3 +210,17 @@ func UserByUUID(uuid string) (user User, err error) {
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt)
 	return
 }
+
+// IfUserExist is func, check user is in db
+func IfUserExist(email, name string) bool {
+	rows, _ := Db.Query("select uuid from users where email = '" + email + "' and name = '" + name + "'")
+	defer rows.Close()
+	rows.Next()
+	uuid := ""
+	rows.Scan(&uuid)
+
+	if uuid == "" {
+		return false
+	}
+	return true
+}

@@ -44,13 +44,36 @@ func Login(writer http.ResponseWriter, request *http.Request) {
 // GET /signup
 // show the signup page
 func Signup(writer http.ResponseWriter, request *http.Request) {
-	utils.GenerateHTML(writer, nil, "login.layout", "public.navbar", "signup")
+	var LS LoginSkin
+	if ErrorStrC1 != "" {
+		LS = LoginSkin{
+			"Submit",
+			"Signup",
+			ErrorStrC1,
+		}
+	} else {
+		LS = LoginSkin{
+			"Submit",
+			"Signup",
+			"",
+		}
+	}
+	ErrorStrC1 = ""
+	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "signup")
 }
 
 // POST /signup_account
 // create the user account
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	err := request.ParseForm()
+	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
+	if checkExists {
+		fmt.Println("lol exists")
+		ErrorStrC1 = "This name/email already exists\nTry to signup again using different username/email"
+		Signup(writer, request)
+		return
+	}
+
 	if err != nil {
 		utils.Danger(err, "Cannot parse form")
 	}
