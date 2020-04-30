@@ -84,6 +84,7 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 	}
 	URLID := request.URL.Query().Get("user_id")
 	URLIDConv, _ := strconv.Atoi(URLID)
+	fmt.Println(URLIDConv)
 	// and user template define content here
 	thread, err := data.AccountThreads(URLIDConv)
 	if err != nil {

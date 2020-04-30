@@ -38,6 +38,7 @@ func Login(writer http.ResponseWriter, request *http.Request) {
 	}
 	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
 	ErrorStrC1 = ""
+
 	// t.ExecuteTemplate(writer, LoginSkin)
 }
 
@@ -91,40 +92,47 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 // POST /authenticate
 // authenticate the user given the email and password
 func Authenticate(writer http.ResponseWriter, request *http.Request) {
-	request.ParseForm()
-	user, err := data.UserByEmail(request.PostFormValue("email"))
+	switch request.Method {
+	case "GET":
 
-	if err != nil {
-		// http.Redirect(writer, request, "/login", 302)
-		ErrorStrC1 = "You might entered wrong email/password \n Try again"
-		Login(writer, request)
-		// http.Redirect()
-		// utils.Danger(err, "Cannot find user")
-		// http.Error(writer, err.Error(), http.StatusInternalServerError)
-		return
-	}
+	case "POST":
+		request.ParseForm()
+		user, err := data.UserByEmail(request.PostFormValue("email"))
 
-	if user.Password == data.Encrypt(request.PostFormValue("password")) {
-		_, err = data.SessionCheck(writer, request)
-		if err == nil {
-			http.Redirect(writer, request, "/", 302)
+		if err != nil {
+			// http.Redirect(writer, request, "/login", 302)
+			ErrorStrC1 = "You might entered wrong email/password \n Try again"
+			Login(writer, request)
+			// http.Redirect()
+			// utils.Danger(err, "Cannot find user")
+			// http.Error(writer, err.Error(), http.StatusInternalServerError)
 			return
 		}
-		_, err := user.CreateSession()
-		sess, err := user.Session()
-		if err != nil {
-			utils.Danger(err, "Cannot find user")
+
+		if user.Password == data.Encrypt(request.PostFormValue("password")) {
+			_, err = data.SessionCheck(writer, request)
+			if err == nil {
+				http.Redirect(writer, request, "/", 302)
+				return
+			}
+
+			_, err := user.CreateSession()
+			sess, err := user.Session()
+			if err != nil {
+				utils.Danger(err, "Cannot find user")
+			}
+			cookie := http.Cookie{
+				Name:     "_cookie",
+				Value:    fmt.Sprintf("%d&%v", user.Id, sess.Uuid),
+				HttpOnly: true,
+				MaxAge:   24 * 60 * 60,
+			}
+			// main.Authenticate = true
+			http.SetCookie(writer, &cookie)
+			http.Redirect(writer, request, "/", 302)
+		} else {
+			http.Redirect(writer, request, "/login", 302)
 		}
-		cookie := http.Cookie{
-			Name:     "_cookie",
-			Value:    fmt.Sprintf("%d&%v", user.Id, sess.Uuid),
-			HttpOnly: true,
-		}
-		// main.Authenticate = true
-		http.SetCookie(writer, &cookie)
-		http.Redirect(writer, request, "/", 302)
-	} else {
-		http.Redirect(writer, request, "/login", 302)
 	}
 }
 

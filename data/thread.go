@@ -223,17 +223,17 @@ func Threads() (threads []Thread, err error) {
 
 func AccountThreads(alsoid int) (threads []Thread, err error) {
 	fmt.Println("Account Threads started DB search")
-	rows, err := Db.Query("SELECT Id, uuid, topic, user_id, created_at, category FROM threads WHERE user_id=?", alsoid)
+	rows, err := Db.Query("SELECT id, uuid, topic, user_id, created_at, category FROM threads WHERE user_id=?", alsoid)
 	if err != nil {
 		fmt.Println("Error on AccountThreads")
 		return
 	}
 
 	defer rows.Close()
-	if !rows.Next() {
-		fmt.Println("bool worked on empty")
-		return nil, err
-	}
+	// if !rows.Next() {
+	// 	fmt.Println("bool worked on empty")
+	// 	return nil, err
+	// }
 	for rows.Next() {
 		th := Thread{}
 		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.UserId, &th.CreatedAt, &th.Category); err != nil {
@@ -241,7 +241,9 @@ func AccountThreads(alsoid int) (threads []Thread, err error) {
 		}
 		threads = append(threads, th)
 	}
-
+	if len(threads) == 0 {
+		return nil, err
+	}
 	return
 }
 

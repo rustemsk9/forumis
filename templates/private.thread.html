@@ -46,7 +46,7 @@
       num++
       var strNum = ""
       strNum = num.toString()
-      var identify = {{ .User.Name }}
+      var identify = '{{ .User.Name }}'
       point.push(identify);
     </script>
     
@@ -78,7 +78,7 @@
      </div>
   </div>
 
-  $("textarea").resizable();
+
   <script src="/static/js/jquery-3.4.1.min.js"></script>
 
   <script>
@@ -102,14 +102,15 @@
       // so.value = "hey " + point + ",\n";
       }
     }
-      // document.get
+
       console.log("HELLO")
       let ws = new WebSocket('ws://localhost:8080/thread/read?id=21');
 
-ws.onopen = function(){
+ws.onopen = function() {
   //Subscribe to the channel
   ws.send(JSON.stringify({"command": "subscribe","identifier":"{\"channel\":\"ArticlesChannel\"}"}))
 }    
+
 ws.onclose = function() {
   console.log("CLOSING WEBSOCKET")
 }

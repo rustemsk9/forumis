@@ -11,8 +11,8 @@ type User struct {
 	Name      string
 	Email     string
 	Password  string
+	Role      string
 	CreatedAt time.Time
-
 	// LikedPosts []Likes
 }
 
@@ -73,6 +73,7 @@ func DislikeOnPostCreation(alsoid, alsoid2 int) (err error) {
 
 // create a new session for an existing user
 func (user *User) CreateSession() (session Session, err error) {
+	Db.Exec("DELETE from sessions where user_id=$1", user.Id)
 	stmt, err := Db.Prepare(
 		"INSERT INTO sessions(uuid, email, user_id, created_at) VALUES(?, ?, ?, ?)")
 	if err != nil {
@@ -209,6 +210,17 @@ func UserByUUID(uuid string) (user User, err error) {
 	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at FROM users WHERE uuid=?", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt)
 	return
+}
+
+func SessionByUUID(uuid string) bool {
+	// user = User{}
+	rows, _ := Db.Query("SELECT id, uuid, name, email, password, created_at FROM sessions WHERE uuid = '" + uuid + "'")
+	uuid2 := ""
+	rows.Scan(&uuid2)
+	if uuid2 == "" {
+		return false
+	}
+	return true
 }
 
 // IfUserExist is func, check user is in db

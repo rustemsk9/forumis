@@ -2,6 +2,7 @@ package data
 
 import (
 	"errors"
+	"fmt"
 	"net/http"
 	"strings"
 	"time"
@@ -23,6 +24,7 @@ func (session *Session) Valid() (valid bool, err error) {
 		valid = false
 		return
 	}
+	fmt.Println(session.Uuid)
 	if session.Id != 0 {
 		valid = true
 	}
