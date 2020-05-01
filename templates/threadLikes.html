@@ -3,34 +3,39 @@
   <head>
     <link href="/static/css/font-awesome.min.css" rel="stylesheet"/>
       </head>
+      <style> 
+      body {
+          height: 40px;
+      overflow-y: hidden;
+      }
+        button {
+            background-color: transparent;
+            border-color: transparent;
+        }
+      </style>
       <body style="overflow-y: hidden;">
           {{ if (index .Li 0).UserId }}
           <div style="display: inline-block;">
-          <form action="likes/accept" method="POST">
+          <form action="threadLikes/accept" method="POST">
     <input type="hidden" name="userUSER" value="{{ (index .Li 0).UserId }}">
-    <input type="hidden" name="okay" value="{{ (index .Li 0).PostId }}">
-<button class= "fa fa-thumbs-up"></button>
+    <input type="hidden" name="okay" value="{{ (index .Li 0).ThreadId }}">
+<button class="fa fa-thumbs-down"></button>
 {{ $v := (index .Li 0) }} {{ $v.LengthOfLikes }}
 </form> 
 {{ end }}
 </div>
-
 {{ if (index .Di 0).UserId }}
 <div style="display: inline-block;">
-<form action="likes/dislike" method="POST">
+<form action="threadLikes/dislike" method="POST">
   <input type="hidden" name="userUSER2" value="{{ (index .Di 0).UserId }}">
-    <input type="hidden" name="okay2" value="{{ (index .Di 0).PostId }}">
-<button class="fa fa-thumbs-down"></button>
+  
+    <input type="hidden" name="okay2" value="{{ (index .Di 0).ThreadId }}">
+<button class= "fa fa-thumbs-up"></button>
 {{ $v := (index .Di 0) }} {{ $v.LengthOfDislikes }}
 </div>
 </form> 
 {{ end }}
 </div>
-<!-- <div style="display: none" class="slide-out"> -->
-   
-<!-- </div> -->
-<script>
- 
-</script>
+
 </body>
 </html>

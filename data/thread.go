@@ -25,6 +25,11 @@ type LikeProperties struct {
 	Di []Dislikes
 }
 
+type ThreadLikeProperties struct {
+	Li []ThreadLikes
+	Di []ThreadDislikes
+}
+
 type Likes struct {
 	Type          string
 	UserId        int
@@ -41,6 +46,22 @@ type Dislikes struct {
 	UserDisliked     bool
 }
 
+type ThreadLikes struct {
+	Type          string
+	UserId        int
+	ThreadId      int
+	LengthOfLikes int
+	UserDisliked  bool
+}
+
+type ThreadDislikes struct {
+	Type             string
+	UserId           int
+	ThreadId         int
+	LengthOfDislikes int
+	UserDisliked     bool
+}
+
 func GetCookieValue(request *http.Request) int {
 	var alsoid int
 	cook, err := request.Cookie("_cookie")
@@ -52,6 +73,82 @@ func GetCookieValue(request *http.Request) int {
 	return alsoid
 }
 
+func GetThreadLikes(findid int) (THLI []ThreadLikes) {
+	rows, err := Db.Query("SELECT * FROM threadlikes WHERE thread_id=?", findid)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println("Error on select GetThreadLikes")
+		return
+	}
+
+	// likesAll := []Likes{}
+	var likeLength int
+	for rows.Next() {
+		thLikes := ThreadLikes{}
+		likeLength++
+		if err = rows.Scan(&thLikes.Type, &thLikes.ThreadId, &thLikes.UserId); err != nil {
+			return
+		}
+		THLI = append(THLI, thLikes)
+	}
+	for i := range THLI {
+		THLI[i].LengthOfLikes = likeLength - 1
+	}
+	return
+}
+
+func GetThreadDislikes(findid int) (THLI []ThreadDislikes) {
+	rows, err := Db.Query("SELECT * FROM threaddislikes WHERE thread_id=?", findid)
+	defer rows.Close()
+	if err != nil {
+		fmt.Println("Error on select GetThreadDislikes")
+		return
+	}
+
+	// likesAll := []Likes{}
+	var likeLength int
+	for rows.Next() {
+		thLikes := ThreadDislikes{}
+		likeLength++
+		if err = rows.Scan(&thLikes.Type, &thLikes.ThreadId, &thLikes.UserId); err != nil {
+			return
+		}
+		THLI = append(THLI, thLikes)
+	}
+	for i := range THLI {
+		THLI[i].LengthOfDislikes = likeLength - 1
+	}
+	return
+}
+func ApplyThreadLike(stateLike string, userID int, threadId int) {
+	fmt.Println("Apply thread likes in database proccess")
+	var li ThreadLikes
+	stmt, err := Db.Prepare("INSERT INTO threadlikes(type, user_id, thread_id) VALUES(?, ?, ?)")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	err = stmt.QueryRow(stateLike, userID, threadId).
+		Scan(&li.Type, &li.UserId, &li.ThreadId)
+		// can apply only if threadId is right // TODO check sequence
+	return
+}
+
+func ApplyThreadDislike(stateLike string, userID int, threadId int) {
+	fmt.Println("Apply thread dislikes in database proccess")
+	var li ThreadDislikes
+	stmt, err := Db.Prepare("INSERT INTO threaddislikes(type, user_id, thread_id) VALUES(?, ?, ?)")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	// can apply only if threadId is right // TODO check sequence
+	err = stmt.QueryRow(stateLike, userID, threadId).
+		Scan(&li.Type, &li.UserId, &li.ThreadId)
+	return
+}
+
+// }
 func GetLikes(postID int) (Li []Likes) {
 	rows, err := Db.Query("SELECT * FROM likedposts WHERE post_id=?", postID)
 	defer rows.Close()
@@ -150,6 +247,32 @@ func DeleteDislikes(alsoid, postID int) {
 	defer stmt.Close()
 	_, err = stmt.Exec(alsoid, postID)
 	fmt.Println("done delete dislike")
+	return
+}
+
+func DeleteThreadDislikes(alsoid, threadid int) {
+	// row, err := Db.Query
+	stmt, err := Db.Prepare("DELETE FROM threaddislikes WHERE user_id=? AND thread_id=?")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(alsoid, threadid)
+	fmt.Println("done delete threaddislike")
+	return
+}
+
+func DeleteThreadLikes(alsoid, threadid int) {
+	// row, err := Db.Query
+	stmt, err := Db.Prepare("DELETE FROM threadlikes WHERE user_id=? AND thread_id=?")
+	if err != nil {
+		fmt.Println(err)
+		return
+	}
+	defer stmt.Close()
+	_, err = stmt.Exec(alsoid, threadid)
+	fmt.Println("done delete threadlike")
 	return
 }
 

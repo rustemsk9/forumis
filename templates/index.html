@@ -36,7 +36,9 @@
       <div class="pull-right">
         <a href="/thread/read?id={{.Id }}">Read more</a>
       </div>
-      <div class="small">Started by <a class="lead" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.</div>
+      <div style="padding-top: 5px; position: absolute;" class="small">Started by <a class="lead" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.</div>
+      <iframe class="pull-right" sandbox="allow-top-navigation allow-scripts allow-forms" style="border:none;"  height="40px" width="200px" src="/threadLikes?idlikes={{ .Id }}" name="iframe_a"></iframe>
+      
     </div>
   </div>
 </div>

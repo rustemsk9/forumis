@@ -17,14 +17,21 @@ type User struct {
 }
 
 // create a new thread
-func (user *User) CreateThread(topic string, alsoid int, category string) (conv Thread, err error) {
-	stmt, err := Db.Prepare(
-		"INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)")
+func (user *User) CreateThread(topic string, alsoid int, category string) (soid int64, conv Thread, err error) {
+	// stmt, err := Db.Prepare(
+	// 	"INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)")
+	// if err != nil {
+	// 	return
+	// }
+	// defer stmt.Close()
+	// err = stmt.QueryRow(createUUID(), topic, alsoid, time.Now(), category).Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt, &conv.Category)
+	// return
+
+	res, err := Db.Exec("INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)", createUUID(), topic, alsoid, time.Now(), category)
 	if err != nil {
-		return
+		panic(err)
 	}
-	defer stmt.Close()
-	err = stmt.QueryRow(createUUID(), topic, alsoid, time.Now(), category).Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt, &conv.Category)
+	soid, _ = res.LastInsertId()
 	return
 }
 
@@ -37,11 +44,34 @@ func (user *User) CreatePost(conv Thread, body string, alsoid int) (soid int64, 
 	// }
 	// defer stmt.Close()
 	// err = stmt.QueryRow(createUUID(), body, alsoid, conv.Id, time.Now()).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
+
 	res, err := Db.Exec("INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)", createUUID(), body, alsoid, conv.Id, time.Now())
 	if err != nil {
 		panic(err)
 	}
 	soid, _ = res.LastInsertId()
+	return
+}
+
+func LikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+	stmt, err := Db.Prepare("INSERT INTO threadlikes(type, user_id, thread_id) VALUES(?,?,?)")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	li := ThreadLikes{}
+	err = stmt.QueryRow("creator", alsoid, alsoid2).Scan(&li.Type, &li.UserId, &li.ThreadId)
+	return
+}
+
+func DislikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+	stmt, err := Db.Prepare("INSERT INTO threaddislikes(type, user_id, thread_id) VALUES(?,?,?)")
+	if err != nil {
+		return
+	}
+	defer stmt.Close()
+	li := ThreadDislikes{}
+	err = stmt.QueryRow("creator", alsoid, alsoid2).Scan(&li.Type, &li.UserId, &li.ThreadId)
 	return
 }
 
@@ -168,6 +198,50 @@ func PrepareLikedPosts(userID, postID int) bool { //(userLikes []Likes) {
 		}
 
 		if user.PostId == postID {
+			return true
+		}
+		// userLikes = append(userLikes, user)
+	}
+	return false
+}
+
+func PrepareThreadLikedPosts(userID, threadid int) bool { //(userLikes []Likes) {
+
+	rows, err := Db.Query("SELECT type, user_id, thread_id FROM threadlikes WHERE user_id=?", userID)
+	if err != nil {
+		fmt.Println("Error on PrepareLikedPosts")
+		return false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		user := ThreadLikes{}
+		if err = rows.Scan(&user.Type, &user.UserId, &user.ThreadId); err != nil {
+			fmt.Println("BASE on PrepareThreadLikedPosts didnt work")
+		}
+
+		if user.ThreadId == threadid {
+			return true
+		}
+		// userLikes = append(userLikes, user)
+	}
+	return false
+}
+
+func PrepareThreadDislikedPosts(userID, threadid int) bool { //(userLikes []Likes) {
+
+	rows, err := Db.Query("SELECT type, user_id, thread_id FROM threaddislikes WHERE user_id=?", userID)
+	if err != nil {
+		fmt.Println("Error on PrepareLikedPosts")
+		return false
+	}
+	defer rows.Close()
+	for rows.Next() {
+		user := ThreadDislikes{}
+		if err = rows.Scan(&user.Type, &user.UserId, &user.ThreadId); err != nil {
+			fmt.Println("BASE on PrepareThreadDislikedPosts didnt work")
+		}
+
+		if user.ThreadId == threadid {
 			return true
 		}
 		// userLikes = append(userLikes, user)

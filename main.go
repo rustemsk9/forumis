@@ -80,6 +80,11 @@ func main() {
 		"/likes":         routes.PostLike,
 		"/likes/accept":  routes.AcceptLike,
 		"/likes/dislike": routes.AcceptDislike,
+
+		// threadlikes
+		"/threadLikes":         routes.ThreadLikes,
+		"/threadLikes/accept":  routes.ApplyThreadLikes,
+		"/threadLikes/dislike": routes.ApplyThreadDislikes,
 	}
 
 	for pattern, handler := range mapper {

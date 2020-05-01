@@ -479,3 +479,44 @@
 [ERROR] 2020/04/30 22:07:38 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
 [ERROR] 2020/04/30 22:15:49 util.go:57: sql: no rows in result set Cannot get user from session
 [ERROR] 2020/04/30 22:15:49 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:34:53 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:34:53 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:36:43 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:36:43 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:38:13 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:38:13 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:38:48 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:38:48 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:39:51 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:39:51 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 17:40:14 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 17:40:14 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 18:00:54 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 18:00:54 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 18:12:42 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 18:12:42 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 18:22:56 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 18:22:56 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 20:39:36 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:39:59 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:39:59 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 20:58:31 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:58:31 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 20:58:39 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:58:39 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 20:59:04 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:59:04 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 20:59:58 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 20:59:58 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:00:04 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:00:04 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:00:09 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:00:09 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:25:45 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:25:45 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:25:51 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:25:51 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:31:06 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:31:06 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2020/05/01 21:31:09 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2020/05/01 21:31:09 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
