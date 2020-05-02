@@ -5,6 +5,9 @@
   var num = 0
 </script>
 <style>
+    iframe {
+    margin-top: -10px;
+  }
   .fa {
     font-size: 25px;
     cursor: pointer;
@@ -21,8 +24,6 @@
   }
   .fa:hover {
     color: darkblue;
-
-
   }
   </style>
   <section style="margin-top: 20px;">
@@ -101,20 +102,20 @@
       }
     }
 
-      console.log("HELLO")
-      let ws = new WebSocket('ws://localhost:8080/thread/read?id=21');
+//       console.log("HELLO")
+//       let ws = new WebSocket('ws://localhost:8080/thread/read?id=21');
 
-ws.onopen = function() {
-  //Subscribe to the channel
-  ws.send(JSON.stringify({"command": "subscribe","identifier":"{\"channel\":\"ArticlesChannel\"}"}))
-}    
+// ws.onopen = function() {
+//   //Subscribe to the channel
+//   ws.send(JSON.stringify({"command": "subscribe","identifier":"{\"channel\":\"ArticlesChannel\"}"}))
+// }    
 
-ws.onclose = function() {
-  console.log("CLOSING WEBSOCKET")
-}
-  ws.onmessage = function(msg) {
-    console.log(JSON.parse(msg.data).message);
-  }
+// ws.onclose = function() {
+//   console.log("CLOSING WEBSOCKET")
+// }
+//   ws.onmessage = function(msg) {
+//     console.log(JSON.parse(msg.data).message);
+//   }
     </script>
 </section>
 {{ end }}

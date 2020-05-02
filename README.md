@@ -19,7 +19,7 @@ $ go get github.com/go-sql-driver/mysql
 
 then you can run it
 ```
-$ cd $GOPATH/src/casual-talk
+$ cd $GOPATH/src/forum
 
 $ go run main.go 
 ```
@@ -28,6 +28,6 @@ BTW, if you want to run this project in Docker directly, you need to link this c
 say you have been pull MySQL image and run MySQL with docker before you run this.
 
 ```
-$ docker build -t casual-talk .
-$ docker run --link mysql:mysql -p 8080:8080 casual-talk
+$ docker build -t forum .
+$ docker run --link mysql:mysql -p 8080:8080 forum
 ```

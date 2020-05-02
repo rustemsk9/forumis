@@ -66,7 +66,8 @@ func GetCookieValue(request *http.Request) int {
 	var alsoid int
 	cook, err := request.Cookie("_cookie")
 	if err != nil {
-		fmt.Println("Error") // or redirect
+		fmt.Println("Error on Get Cookie") // or redirect
+		return -1
 	}
 	cooPart := strings.Split(cook.Value, "&")
 	alsoid, _ = strconv.Atoi(cooPart[0])
@@ -344,6 +345,7 @@ func Threads() (threads []Thread, err error) {
 	return
 }
 
+// show /account threads created by user
 func AccountThreads(alsoid int) (threads []Thread, err error) {
 	fmt.Println("Account Threads started DB search")
 	rows, err := Db.Query("SELECT id, uuid, topic, user_id, created_at, category FROM threads WHERE user_id=?", alsoid)

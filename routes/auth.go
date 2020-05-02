@@ -66,10 +66,10 @@ func Signup(writer http.ResponseWriter, request *http.Request) {
 // POST /signup_account
 // create the user account
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
-	err := request.ParseForm()
+	err := request.ParseForm() // err
 	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
 	if checkExists {
-		fmt.Println("lol exists")
+		// fmt.Println("lol exists")
 		ErrorStrC1 = "This name/email already exists\nTry to signup again using different username/email"
 		Signup(writer, request)
 		return

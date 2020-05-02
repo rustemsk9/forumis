@@ -189,7 +189,9 @@ func ApplyThreadLikes(writer http.ResponseWriter, request *http.Request) {
 	sook2, _ := strconv.Atoi(sook)
 	// data.ApplyThreadLike(user.Name, alsoid, sook2)
 
-	if alsoid == sook2 {
+	if alsoid == -1 {
+		writer.Write([]byte("You are guest:)"))
+	} else if alsoid == sook2 {
 		writer.Write([]byte("You are creator:)"))
 	} else {
 		if data.PrepareThreadLikedPosts(alsoid, userId2) {

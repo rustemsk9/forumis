@@ -18,15 +18,6 @@ type User struct {
 
 // create a new thread
 func (user *User) CreateThread(topic string, alsoid int, category string) (soid int64, conv Thread, err error) {
-	// stmt, err := Db.Prepare(
-	// 	"INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)")
-	// if err != nil {
-	// 	return
-	// }
-	// defer stmt.Close()
-	// err = stmt.QueryRow(createUUID(), topic, alsoid, time.Now(), category).Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt, &conv.Category)
-	// return
-
 	res, err := Db.Exec("INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)", createUUID(), topic, alsoid, time.Now(), category)
 	if err != nil {
 		panic(err)
@@ -37,14 +28,6 @@ func (user *User) CreateThread(topic string, alsoid int, category string) (soid 
 
 // create a new post to a thread
 func (user *User) CreatePost(conv Thread, body string, alsoid int) (soid int64, err error) { // (post Post, err error) {
-	// stmt, err := Db.Prepare(
-	// 	"INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)")
-	// if err != nil {
-	// 	return
-	// }
-	// defer stmt.Close()
-	// err = stmt.QueryRow(createUUID(), body, alsoid, conv.Id, time.Now()).Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
-
 	res, err := Db.Exec("INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)", createUUID(), body, alsoid, conv.Id, time.Now())
 	if err != nil {
 		panic(err)
@@ -299,7 +282,7 @@ func SessionByUUID(uuid string) bool {
 
 // IfUserExist is func, check user is in db
 func IfUserExist(email, name string) bool {
-	rows, _ := Db.Query("select uuid from users where email = '" + email + "' and name = '" + name + "'")
+	rows, _ := Db.Query("select uuid from users where email = '" + email + "' or name = '" + name + "'")
 	defer rows.Close()
 	rows.Next()
 	uuid := ""

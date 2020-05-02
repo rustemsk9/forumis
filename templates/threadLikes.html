@@ -1,8 +1,5 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet"/>
-      </head>
       <style> 
       body {
           height: 40px;
@@ -13,24 +10,25 @@
             border-color: transparent;
         }
       </style>
-      <body style="overflow-y: hidden;">
+      <html style="overflow-y: hidden;">
           {{ if (index .Li 0).UserId }}
           <div style="display: inline-block;">
           <form action="threadLikes/accept" method="POST">
     <input type="hidden" name="userUSER" value="{{ (index .Li 0).UserId }}">
     <input type="hidden" name="okay" value="{{ (index .Li 0).ThreadId }}">
-<button class="fa fa-thumbs-down"></button>
+<button><img src="/static/THUMBUP.svg"></button>
 {{ $v := (index .Li 0) }} {{ $v.LengthOfLikes }}
 </form> 
 {{ end }}
 </div>
+
 {{ if (index .Di 0).UserId }}
 <div style="display: inline-block;">
 <form action="threadLikes/dislike" method="POST">
   <input type="hidden" name="userUSER2" value="{{ (index .Di 0).UserId }}">
   
     <input type="hidden" name="okay2" value="{{ (index .Di 0).ThreadId }}">
-<button class= "fa fa-thumbs-up"></button>
+<button><img src="/static/ris3.svg"></button>
 {{ $v := (index .Di 0) }} {{ $v.LengthOfDislikes }}
 </div>
 </form> 
