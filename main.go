@@ -98,7 +98,7 @@ func main() {
 		Handler:        mux,
 		ReadTimeout:    time.Duration(config.ReadTimeout * int64(time.Second)),
 		WriteTimeout:   time.Duration(config.WriteTimeout * int64(time.Second)),
-		MaxHeaderBytes: 1 << 20,
+		MaxHeaderBytes: 1 << 20, // 1 MB
 	}
 	server.ListenAndServe()
 	fmt.Println("Server started : on 8080")
