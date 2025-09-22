@@ -2,11 +2,13 @@ package routes
 
 import (
 	"fmt"
-	"forum/data"
-	"forum/utils"
 	"net/http"
 	"strings"
 	"time"
+
+	"forum/utils"
+
+	"forum/data"
 )
 
 type LoginSkin struct {

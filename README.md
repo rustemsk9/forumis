@@ -19,8 +19,6 @@ $ go get github.com/go-sql-driver/mysql
 
 then you can run it
 ```
-$ cd $GOPATH/src/forum
-
 $ go run main.go 
 ```
 

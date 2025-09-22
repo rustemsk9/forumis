@@ -3,11 +3,13 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"forum/routes"
-	"forum/utils"
 	"net/http"
 	"os"
 	"time"
+
+	"forum/utils"
+
+	"forum/routes"
 
 	_ "github.com/mattn/go-sqlite3"
 )

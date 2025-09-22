@@ -1,9 +1,10 @@
 package routes
 
 import (
+	"net/http"
+
 	"forum/data"
 	"forum/utils"
-	"net/http"
 )
 
 // GET /err?msg=

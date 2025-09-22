@@ -2,13 +2,14 @@ package routes
 
 import (
 	"fmt"
-	"forum/data"
-	"forum/utils"
 	"html/template"
 	"log"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"forum/data"
+	"forum/utils"
 )
 
 func AccountCheck(writer http.ResponseWriter, request *http.Request) {
@@ -224,8 +225,9 @@ func ApplyThreadDislikes(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println(postID2)
 	sook2, _ := strconv.Atoi(sook)
 	// data.ApplyThreadDislike(user.Name, alsoid, sook2)
-
-	if alsoid == sook2 {
+	if alsoid == -1 {
+		writer.Write([]byte("You are guest:)"))
+	} else if alsoid == sook2 {
 		writer.Write([]byte("You are creator:)"))
 	} else {
 		if data.PrepareThreadDislikedPosts(alsoid, postID2) {
@@ -255,7 +257,9 @@ func AcceptLike(writer http.ResponseWriter, request *http.Request) {
 	postID2, _ := strconv.Atoi(postID)
 	sook2, _ := strconv.Atoi(sook)
 	// eqLike := false
-	if alsoid == sook2 {
+	if alsoid == -1 {
+		writer.Write([]byte("You are guest:)"))
+	} else if alsoid == sook2 {
 		writer.Write([]byte("You are creator:)"))
 	} else {
 		if data.PrepareLikedPosts(alsoid, postID2) {
@@ -285,7 +289,9 @@ func AcceptDislike(writer http.ResponseWriter, request *http.Request) {
 	sook := request.PostFormValue("okay2")
 	postID2, _ := strconv.Atoi(postID)
 	sook2, _ := strconv.Atoi(sook)
-	if alsoid == sook2 {
+	if alsoid == -1 {
+		writer.Write([]byte("You are guest:)"))
+	} else if alsoid == sook2 {
 		writer.Write([]byte("You are creator:)"))
 	} else {
 		if data.PrepareDislikedPosts(alsoid, postID2) {

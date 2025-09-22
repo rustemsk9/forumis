@@ -6,9 +6,10 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
-	"forum/utils"
 	"log"
 	"os"
+
+	"forum/utils"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -33,7 +34,6 @@ func init() {
 	if err != nil {
 		log.Fatal(err)
 	}
-	return
 }
 
 func loadSqlInfo() {
