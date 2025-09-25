@@ -3,3 +3,24 @@
 [ERROR] 2025/09/22 16:42:40 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
 [ERROR] 2025/09/22 16:43:17 util.go:57: sql: no rows in result set Cannot get user from session
 [ERROR] 2025/09/22 16:43:17 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/23 22:47:55 util.go:57: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/23 22:48:36 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2025/09/23 22:48:36 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/23 22:49:09 util.go:57: sql: no rows in result set Cannot get user from session
+[ERROR] 2025/09/23 22:49:09 util.go:57: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/23 23:27:30 util.go:59: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/23 23:27:39 util.go:59: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 11:06:28 util.go:60: sql: no rows in result set Cannot create session
+[ERROR] 2025/09/24 11:12:02 util.go:60: sql: no rows in result set Cannot create session
+[ERROR] 2025/09/24 11:13:35 util.go:60: sql: no rows in result set Cannot create session
+[ERROR] 2025/09/24 11:20:01 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 12:26:28 util.go:60: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/24 12:27:07 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 12:27:25 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 12:31:30 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 12:39:10 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 14:53:04 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 15:00:40 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 15:03:38 util.go:60: sql: no rows in result set Cannot Create Like/Dislike on Post Creation
+[ERROR] 2025/09/24 15:55:44 util.go:60: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/25 14:59:57 util.go:60: sql: no rows in result set Cannot create user

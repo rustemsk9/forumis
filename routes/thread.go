@@ -6,22 +6,10 @@ import (
 	"log"
 	"net/http"
 	"strconv"
-	"strings"
 
 	"forum/data"
 	"forum/utils"
 )
-
-func AccountCheck(writer http.ResponseWriter, request *http.Request) {
-	// var alsoid int
-	fmt.Println("OK")
-	cook, err := request.Cookie("_cookie")
-	if err != nil {
-		fmt.Println("Error") // or redirect
-	}
-	cooPart := strings.Split(cook.Value, "&")
-	http.Redirect(writer, request, fmt.Sprintf("/account?user_id=%v", cooPart[0]), 302)
-}
 
 // GET /threads/new
 // show the new thread form page
@@ -53,16 +41,11 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 		}
 		alsoid := data.GetCookieValue(request)
 		topic := request.PostFormValue("topic")
-		ourID, _, err := user.CreateThread(topic, alsoid, selected)
+		_, _, err = user.CreateThread(topic, alsoid, selected)
 		if err != nil {
 			utils.Danger(err, "Cannot create thread")
 		}
 
-		err = data.LikeOnThreadCreation(alsoid, int(ourID)) // only with PostId
-		err = data.DislikeOnThreadCreation(alsoid, int(ourID))
-		if err != nil {
-			utils.Danger(err, "Cannot Create Like/Dislike on Post Creation")
-		}
 		http.Redirect(writer, request, "/", 302)
 	}
 }
@@ -83,48 +66,6 @@ func ReadThread(writer http.ResponseWriter, request *http.Request) {
 			utils.GenerateHTML(writer, &thread, "layout", "private.navbar", "private.thread")
 		}
 	}
-}
-
-func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
-	_, err := data.SessionCheck(writer, request)
-	if err != nil {
-		http.Redirect(writer, request, "/login", 302)
-	}
-	URLID := request.URL.Query().Get("user_id")
-	URLIDConv, _ := strconv.Atoi(URLID)
-	fmt.Println(URLIDConv)
-	// and user template define content here
-	thread, err := data.AccountThreads(URLIDConv)
-	if err != nil {
-		fmt.Println("Error on routes ReadAccount")
-		http.Redirect(writer, request, "/", 302)
-		return
-	}
-
-	userINFO := data.GetUserById(URLIDConv)
-	if thread == nil {
-		utils.GenerateHTML(writer, &userINFO, "layout", "private.navbar", "justaccount")
-		// http.Redirect(writer, request, "/", 302)
-		return
-	}
-
-	posts, _ := data.GetUserPosts(URLIDConv)
-	likedposts, _ := data.GetUserLikedPosts(URLIDConv)
-
-	fmt.Println(likedposts)
-	getFinal, _ := data.GetFromLikedDB(likedposts)
-	thread[0].Cards = posts
-	// fmt.Println(getFinal)
-	thread[0].LikedPosts = getFinal
-	filesFrom := []string{"layout", "private.navbar", "account", "accountbypost"}
-	var files []string
-	for _, file := range filesFrom {
-		files = append(files, fmt.Sprintf("templates/%s.html", file))
-	}
-
-	templates := template.Must(template.ParseFiles(files...))
-	templates.ExecuteTemplate(writer, "layout", &thread)
-
 }
 
 func ThreadLikes(writer http.ResponseWriter, request *http.Request) {
@@ -256,12 +197,18 @@ func AcceptLike(writer http.ResponseWriter, request *http.Request) {
 	sook := request.PostFormValue("okay")
 	postID2, _ := strconv.Atoi(postID)
 	sook2, _ := strconv.Atoi(sook)
-	// eqLike := false
+
+	// Check conditions and handle accordingly
 	if alsoid == -1 {
-		writer.Write([]byte("You are guest:)"))
+		// Guest user - redirect with error message
+		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		return
 	} else if alsoid == sook2 {
-		writer.Write([]byte("You are creator:)"))
+		// Creator trying to like their own post - redirect with error message
+		http.Redirect(writer, request, "/err?msg=You cannot like your own post", 302)
+		return
 	} else {
+		// Valid user action
 		if data.PrepareLikedPosts(alsoid, postID2) {
 			data.DeleteLikes(alsoid, postID2)
 		} else {
@@ -289,11 +236,18 @@ func AcceptDislike(writer http.ResponseWriter, request *http.Request) {
 	sook := request.PostFormValue("okay2")
 	postID2, _ := strconv.Atoi(postID)
 	sook2, _ := strconv.Atoi(sook)
+
+	// Check conditions and handle accordingly
 	if alsoid == -1 {
-		writer.Write([]byte("You are guest:)"))
+		// Guest user - redirect with error message
+		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		return
 	} else if alsoid == sook2 {
-		writer.Write([]byte("You are creator:)"))
+		// Creator trying to dislike their own post - redirect with error message
+		http.Redirect(writer, request, "/err?msg=You cannot dislike your own post", 302)
+		return
 	} else {
+		// Valid user action
 		if data.PrepareDislikedPosts(alsoid, postID2) {
 			data.DeleteDislikes(alsoid, postID2)
 		} else {
@@ -340,11 +294,6 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 			utils.Danger(err, "Cannot create post")
 		}
 
-		err = data.LikeOnPostCreation(alsoid, int(ourID)) // only with PostId
-		err = data.DislikeOnPostCreation(alsoid, int(ourID))
-		if err != nil {
-			utils.Danger(err, "Cannot Create Like/Dislike on Post Creation")
-		}
 		url := fmt.Sprint("/thread/read?id=", id)
 		http.Redirect(writer, request, url, 302)
 	}

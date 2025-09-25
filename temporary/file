@@ -1,0 +1,9 @@
+<iframe class="pull-right" sandbox="allow-top-navigation allow-scripts allow-forms" style="border:none;"  height="40px" width="200px" src="/threadLikes?idlikes={{ .Id }}&userid={{ .UserId }}" name="iframe_a"></iframe>
+
+on post or thread creation 
+error check functions 
+		// err = data.LikeOnPostCreation(alsoid, int(ourID)) // only with PostId
+		// err = data.DislikeOnPostCreation(alsoid, int(ourID))
+		// if err != nil {
+		// 	utils.Danger(err, "Cannot Create Like/Dislike on Post Creation")
+		// }

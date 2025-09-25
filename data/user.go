@@ -86,14 +86,37 @@ func DislikeOnPostCreation(alsoid, alsoid2 int) (err error) {
 
 // create a new session for an existing user
 func (user *User) CreateSession() (session Session, err error) {
-	Db.Exec("DELETE from sessions where user_id=$1", user.Id)
+	// Delete existing sessions for this user
+	Db.Exec("DELETE from sessions where user_id=?", user.Id)
+
+	// Create the session UUID
+	sessionUUID := createUUID()
+
+	// Create cookie string value in format "userId&sessionUUID"
+	cookieString := fmt.Sprintf("%d&%s", user.Id, sessionUUID)
+
+	// Insert session with cookie_string field
 	stmt, err := Db.Prepare(
-		"INSERT INTO sessions(uuid, email, user_id, created_at) VALUES(?, ?, ?, ?)")
+		"INSERT INTO sessions(uuid, email, user_id, created_at, cookie_string) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
-	err = stmt.QueryRow(createUUID(), user.Email, user.Id, time.Now()).Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt)
+
+	// Execute the INSERT statement
+	_, err = stmt.Exec(sessionUUID, user.Email, user.Id, time.Now(), cookieString)
+	if err != nil {
+		return
+	}
+
+	// Now retrieve the created session
+	session = Session{
+		Uuid:         sessionUUID,
+		Email:        user.Email,
+		UserId:       user.Id,
+		CreatedAt:    time.Now(),
+		CookieString: cookieString,
+	}
 
 	return
 }
@@ -101,8 +124,8 @@ func (user *User) CreateSession() (session Session, err error) {
 // get the session for an existing user
 func (user *User) Session() (session Session, err error) {
 	session = Session{}
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at FROM sessions WHERE user_id=?", user.Id).
-		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt)
+	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string FROM sessions WHERE user_id=?", user.Id).
+		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString)
 	return
 }
 
@@ -274,10 +297,7 @@ func SessionByUUID(uuid string) bool {
 	rows, _ := Db.Query("SELECT id, uuid, name, email, password, created_at FROM sessions WHERE uuid = '" + uuid + "'")
 	uuid2 := ""
 	rows.Scan(&uuid2)
-	if uuid2 == "" {
-		return false
-	}
-	return true
+	return uuid != ""
 }
 
 // IfUserExist is func, check user is in db
@@ -288,8 +308,5 @@ func IfUserExist(email, name string) bool {
 	uuid := ""
 	rows.Scan(&uuid)
 
-	if uuid == "" {
-		return false
-	}
-	return true
+	return uuid != ""
 }

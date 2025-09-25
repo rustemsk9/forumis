@@ -1,0 +1,38 @@
+// GET /api/thread/{id}/status
+func GetThreadVoteStatus(writer http.ResponseWriter, request *http.Request) {
+	// Extract thread ID from URL path
+	path := request.URL.Path
+	parts := strings.Split(path, "/")
+	if len(parts) < 4 {
+		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		return
+	}
+
+	threadIdStr := parts[3] // /api/thread/{id}/status
+	threadId, err := strconv.Atoi(threadIdStr)
+	if err != nil {
+		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		return
+	}
+
+	// Get user ID from cookie
+	userId := data.GetCookieValue(request)
+
+	// Get the thread to access its methods
+	thread, err := data.ThreadById(threadId)
+	if err != nil {
+		http.Error(writer, "Thread not found", http.StatusNotFound)
+		return
+	}
+
+	// Return vote status (even for unauthenticated users, just without personal vote info)
+	status := ThreadVoteStatus{
+		Likes:        thread.GetLikesCount(),
+		Dislikes:     thread.GetDislikesCount(),
+		UserLiked:    userId > 0 && data.HasUserLikedThread(userId, threadId),
+		UserDisliked: userId > 0 && data.HasUserDislikedThread(userId, threadId),
+	}
+
+	writer.Header().Set("Content-Type", "application/json")
+	json.NewEncoder(writer).Encode(status)
+}

@@ -1,41 +1,90 @@
 {{ define "layout" }}
-
 <!DOCTYPE html>
 <html lang="en">
   <head>
-    <meta charset="utf-8"/>
-    <meta http-equiv="X-UA-Compatible" content="IE=9"/>
-    <meta name="viewport" content="width=device-width, initial-scale=1"/>
-    
-    <div style="position: absolute; margin-left: 420px;"><img width="150px" height="150px" src="/static/book.png"></div>
-    <title>Forum Talk</title>
-    <link href="/static/css/bootstrap.min.css" rel="stylesheet"/>
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet"/>
+    <meta charset="utf-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=9" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+
+    <link href="/static/css/bootstrap.min.css" rel="stylesheet" />
+    <link href="/static/css/font-awesome.min.css" rel="stylesheet" />
+    <link href="/static/css/layout.css" rel="stylesheet" type="text/css" />
   </head>
-  <body style="padding-top: 50px; margin: 0 auto; max-width: 1000px;">
-    <!-- <nav>
-      <a class="pull" href="/">Home</a>
-    </nav> -->
-    
-    <div style="padding-left: 100px; padding-right: 100px; padding-top: 70px;">
-    {{ template "navbar" . }}
+  <body class="d-flex flex-column bg-light">
+    <div class="container-lg">
+      <title>Forum Talk</title>
+      <video
+        autoplay
+        muted
+        loop
+        style="
+          width: 99%;
+          height: 250px;
+          object-fit: cover;
+          border-radius: 30px;
+          z-index: -1;
+          transform: scale(0.8);
+          position: absolute;
+          top: 0;
+          left: 0;
+        "
+      >
+        <source
+          src="/static/images/tree.webm"
+          type="video/webm; codecs=vp9, opus"
+        />
+        <source src="/static/images/tree.mp4" type="video/mp4" />
+        Your browser does not support the video tag.
+      </video>
+      <!-- </div> -->
+      <!-- </div><div class="start-50 translate-middle-x"> -->
+      <!-- <img class="img-fluid" width="150" height="150" src="/static/book2.png" alt="Forum Book"> -->
+      <!-- </div> -->
     </div>
-    <div class="container">
-      
+    <div
+      class="container-lg position-relative padding-left-right-20"
+      style="z-index: 1; margin-top: 180px; margin-bottom: 20px"
+    >
+      {{ template "navbar" . }}
+    </div>
+
+    <!-- Main content area -->
+    <main class="container-lg flex-grow-1 py-4">
       {{ template "content" . }}
-      
-    </div> <!-- /container -->
-    
-    <div style="padding-top: 50px" class="row">
-      <div class="col-sm-4">forum instructions<br><kbd>Only Registered users</kbd> can create <kbd>threads/posts</kbd><br>Signs like:<kbd>private thread</kbd> or <kbd>public thread</kbd>provided by status of <b>registered/not registered</b> users respectfully </div>
-      <div class="col-sm-4">keyboard shortcuts for windows/macos <br><kbd>ctrl + shift + J</kbd><br><kbd>cmd + alt + i</kbd></div>
-      <div class="col-sm-4">additional link like: about/concept/facebook/vk</div>
-    </div>
-    
-    <!-- <script src="/static/js/jquery-3.4.1.min.js"></script> -->
-    
-    <!-- <script src="/static/js/bootstrap.min.js"></script> -->
-    
+    </main>
+
+    <!-- Footer area -->
+    <footer class="container-lg mt-auto py-4">
+      <div class="row g-4">
+        <div class="col-md-4">
+          <h6>Forum Instructions</h6>
+          <p class="small">
+            <kbd>Only Registered users</kbd> can create <kbd>threads/posts</kbd
+            ><br />
+            Signs like: <kbd>private thread</kbd> or
+            <kbd>public thread</kbd> provided by status of
+            <b>registered/not registered</b> users respectfully
+          </p>
+        </div>
+        <div class="col-md-4">
+          <h6>Keyboard Shortcuts</h6>
+          <p class="small">
+            Windows/macOS shortcuts:<br />
+            <kbd>ctrl + shift + J</kbd><br />
+            <kbd>cmd + alt + i</kbd>
+          </p>
+        </div>
+        <div class="col-md-4">
+          <h6>Additional Links</h6>
+          <p class="small">Links: about/concept/facebook/vk</p>
+        </div>
+      </div>
+    </footer>
+
+    <!-- Cookie Consent Banner -->
+    {{ template "cookie-consent" . }}
+
+    <script src="/static/js/cookie-debug.js"></script>
   </body>
 </html>
 

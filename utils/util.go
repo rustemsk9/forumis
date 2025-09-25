@@ -23,7 +23,7 @@ func init() {
 // pass in a list of file names, and get a template
 func ParseTemplateFiles(filenames ...string) (t *template.Template) {
 	var files []string
-	t = template.New("layout")
+	t = template.New("layout.html")
 	for _, file := range filenames {
 		files = append(files, fmt.Sprintf("templates/%s.html", file))
 	}
@@ -36,6 +36,9 @@ func GenerateHTML(writer http.ResponseWriter, data interface{}, fn ...string) {
 	for _, file := range fn {
 		files = append(files, fmt.Sprintf("templates/%s.html", file))
 	}
+	// Always include cookie-consent and lidi templates
+	files = append(files, "templates/cookie-consent.html")
+	// files = append(files, "templates/lidi.html")
 	templates := template.Must(template.ParseFiles(files...))
 	templates.ExecuteTemplate(writer, "layout", data)
 }

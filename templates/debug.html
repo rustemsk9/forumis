@@ -1,0 +1,25 @@
+{{ define "content" }}
+<h2>Debug Information</h2>
+
+<h3>All Cookies (JavaScript)</h3>
+<div id="js-cookies">
+    <script>
+        document.getElementById('js-cookies').innerHTML = '<p>document.cookie: ' + document.cookie + '</p>';
+    </script>
+</div>
+
+<h3>Test Cookie Value</h3>
+<div>
+    <p>This will test if the cookie is being sent to the server:</p>
+    <iframe src="/debug/cookie-test" style="border:1px solid #ccc; width:100%; height:200px;">
+    </iframe>
+</div>
+
+<h3>Thread Likes Test</h3>
+<div>
+    <p>Testing thread likes iframe:</p>
+    <iframe src="/threadLikes?idlikes=1" style="border:1px solid #ccc; width:100%; height:200px;">
+    </iframe>
+</div>
+
+{{ end }}

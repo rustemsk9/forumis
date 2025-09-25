@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"strings"
 	"time"
 
 	"forum/utils"
@@ -22,8 +23,7 @@ type Configuration struct {
 }
 
 var (
-	config Configuration
-	// db            *sql.Db
+	config        Configuration
 	err           error
 	Authenticated = false
 )
@@ -35,6 +35,7 @@ func init() {
 	}
 	decoder := json.NewDecoder(file)
 	config = Configuration{}
+
 	err = decoder.Decode(&config)
 	if err != nil {
 		utils.Danger("Cannot get configuration from file", err)
@@ -42,17 +43,15 @@ func init() {
 	var num int
 	num++
 	if num == 1 {
-		fmt.Println("init(): INITIALISED NUMBER is 1")
+		fmt.Println("[INIT]: INITIALISED NUMBER is 1")
 	} else {
-		fmt.Println("init(): INITIALISED AGAIN")
+		fmt.Println("[INIT]: INITIALISED AGAIN")
 	}
 }
 
 func main() {
 
 	mux := http.NewServeMux()
-
-	// handle static assets
 	files := http.FileServer(http.Dir(config.Static))
 	mux.Handle("/static/", http.StripPrefix("/static/", files))
 
@@ -79,15 +78,52 @@ func main() {
 		"/accountcheck": routes.AccountCheck,
 
 		// like handlers
-		"/likes":         routes.PostLike,
-		"/likes/accept":  routes.AcceptLike,
-		"/likes/dislike": routes.AcceptDislike,
+		// "/likes":         routes.PostLike,
+		// "/likes/accept":  routes.AcceptLike,
+		// "/likes/dislike": routes.AcceptDislike,
 
 		// threadlikes
-		"/threadLikes":         routes.ThreadLikes,
-		"/threadLikes/accept":  routes.ApplyThreadLikes,
-		"/threadLikes/dislike": routes.ApplyThreadDislikes,
+		// "/threadLikes": routes.ThreadLikes,
+		// "/threadLikes/accept":  routes.ApplyThreadLikes,
+		// "/threadLikes/dislike": routes.ApplyThreadDislikes,
+
+		// debug routes
+		"/debug":             routes.DebugPage,
+		"/debug/cookie-test": routes.DebugCookieTest,
 	}
+
+	// Add API routes with a custom handler for pattern matching
+	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+		path := r.URL.Path
+
+		// Handle thread API endpoints
+		if strings.HasPrefix(path, "/api/thread/") {
+			if strings.HasSuffix(path, "/counts") {
+				routes.GetThreadCounts(w, r)
+			} else if strings.HasSuffix(path, "/like") {
+				routes.LikeThread(w, r)
+			} else if strings.HasSuffix(path, "/dislike") {
+				routes.DislikeThread(w, r)
+			} else if strings.HasSuffix(path, "/status") {
+				routes.GetThreadVoteStatus(w, r)
+			} else {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			}
+		} else if strings.HasPrefix(path, "/api/post/") {
+			// Handle post API endpoints
+			if strings.HasSuffix(path, "/like") {
+				routes.LikePost(w, r)
+			} else if strings.HasSuffix(path, "/dislike") {
+				routes.DislikePost(w, r)
+			} else if strings.HasSuffix(path, "/status") {
+				routes.GetPostVoteStatus(w, r)
+			} else {
+				http.Error(w, "Not Found", http.StatusNotFound)
+			}
+		} else {
+			http.Error(w, "Not Found", http.StatusNotFound)
+		}
+	})
 
 	for pattern, handler := range mapper {
 		mux.HandleFunc(pattern, handler)

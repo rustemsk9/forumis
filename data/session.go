@@ -2,29 +2,29 @@ package data
 
 import (
 	"errors"
-	"fmt"
 	"net/http"
 	"strings"
 	"time"
 )
 
 type Session struct {
-	Id        int
-	Uuid      string
-	Email     string
-	UserId    int
-	CreatedAt time.Time
+	Id           int
+	Uuid         string
+	Email        string
+	UserId       int
+	CreatedAt    time.Time
+	CookieString string
 }
 
 // check if session is valid in the database
 func (session *Session) Valid() (valid bool, err error) {
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at FROM sessions WHERE user_id=?", session.UserId).
-		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt)
+	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string FROM sessions WHERE uuid=?", session.Uuid).
+		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString)
 	if err != nil {
 		valid = false
 		return
 	}
-	fmt.Println(session.Uuid)
+	// fmt.Println(session.Uuid) // Removed debug print
 	if session.Id != 0 {
 		valid = true
 	}
@@ -62,10 +62,33 @@ func SessionCheck(writer http.ResponseWriter, request *http.Request) (sess Sessi
 	cookie, err := request.Cookie("_cookie")
 	if err == nil {
 		cooPart := strings.Split(cookie.Value, "&")
-		sess = Session{Uuid: cooPart[0]}
-		if ok, _ := sess.Valid(); ok {
-			err = errors.New("invalid session")
+		if len(cooPart) >= 2 {
+			sess = Session{Uuid: cooPart[1]} // Use the UUID part, not the user ID
+			if ok, _ := sess.Valid(); !ok {
+				err = errors.New("invalid session")
+			}
+		} else {
+			err = errors.New("invalid cookie format")
 		}
 	}
+	return
+}
+
+// Update session with cookie string
+func (session *Session) UpdateCookieString(cookieValue string) error {
+	stmt, err := Db.Prepare("UPDATE sessions SET cookie_string=? WHERE uuid=?")
+	if err != nil {
+		return err
+	}
+	defer stmt.Close()
+
+	_, err = stmt.Exec(cookieValue, session.Uuid)
+	return err
+}
+
+// Get session by cookie string
+func GetSessionByCookie(cookieValue string) (sess Session, err error) {
+	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string FROM sessions WHERE cookie_string=?", cookieValue).
+		Scan(&sess.Id, &sess.Uuid, &sess.Email, &sess.UserId, &sess.CreatedAt, &sess.CookieString)
 	return
 }
