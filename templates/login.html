@@ -3,29 +3,35 @@
   .container {
     position: relative;
     width: 100%;
-    
+
     max-width: 600px;
   }
-  
+
   .container img {
     position: absolute;
-    left:  -100px;
-  width: 100%;
-  height: auto;
-}
+    left: -100px;
+    width: 100%;
+    height: auto;
+  }
 
-.btn {
-  margin-top: 57px;
-  margin-left: 20px;
-}
+  .btn {
+    /* padding-left: 20px; */
+    margin-top: 30px;
+    margin-left: 15px;
+    /* margin-top: 57px; */
+    /* margin-left: -70px; */
+  }
 
-.btn2 {
-  background-color: transparent;
-  position: absolute;
-  margin-top: 57px;
-  margin-left: 95px;
-}
-  .container .btn, .btn2 {
+  .btn2 {
+    background-color: transparent;
+    margin-top: 30px;
+    padding-right: 20px;
+    /* position: absolute; */
+    /* margin-top: 57px; */
+    /* margin-left: 55px; */
+  }
+  .container .btn,
+  .btn2 {
     transform: translate(-50%, -50%);
     -ms-transform: translate(-50%, -50%);
     /* background-color: greenyellow; */
@@ -36,34 +42,74 @@
     cursor: pointer;
     border-radius: 5px;
     text-align: center;
+    /* padding-left: 30px; */
   }
-  
-  .container .btn:hover, .btn2:hover {
+
+  .container .btn:hover,
+  .btn2:hover {
     background-color: black;
     color: greenyellow;
   }
-  
-  </style>
-<form class="form-signin center" role="form" action="/authenticate" method="post">
+
+  .button-wrapper {
+    padding-top: 100px;
+    display: flex;
+    align-items: center; /* vertical alignment */
+
+    gap: 100px; /* spacing between image and buttons */
+  }
+</style>
+<form
+  class="form-signin center"
+  role="form"
+  action="/authenticate"
+  method="post"
+>
   <h2 class="form-signin-heading">
     <i class="fa fa-comments-o">
       <a href="/">Forum Talk</a>
     </i>
   </h2>
   <div class="container">
-  <input type="email" name="email" class="form-control" placeholder="Email address" required autofocus>
-  <input type="password" name="password" class="form-control" placeholder="Password" required>
-    <img style="width: 500px;" src="/static/images/computer2.png">
-    
+    <input
+      type="email"
+      name="email"
+      class="form-control"
+      placeholder="Email address"
+      required
+      autofocus
+    />
+    <input
+      type="password"
+      name="password"
+      class="form-control"
+      placeholder="Password"
+      required
+    />
+    <!-- <img style="width: 500px" src="/static/images/computer2.png" />
+
     <button class="btn" type="submit">{{ .Submit }}</button>
-    
-    <button class="btn2"><a href="/signup">{{ .Signup }}</a></button>
-    
+
+    <button class="btn2"><a href="/signup">{{ .Signup }}</a></button> -->
+    <div class="button-wrapper">
+      <img
+        style="width: 500px"
+        src="/static/images/computer2.png"
+        alt="Login Icon"
+        class="login-img"
+      />
+      <button class="btn" type="submit">
+        {{ if .Submit }}{{ .Submit }}{{ else }}Login{{ end }}
+      </button>
+      <button class="btn2">
+        <a href="/signup"
+          >{{ if .Signup }}{{ .Signup }} {{ else }}Signup{{ end }}
+        </a>
+      </button>
+    </div>
   </div>
-  <br>
-  {{ .ErrorStr }}
+  <br />
+  {{ .Error }}
 </form>
-
-
 
 {{ end }}

@@ -7,3 +7,27 @@ error check functions
 		// if err != nil {
 		// 	utils.Danger(err, "Cannot Create Like/Dislike on Post Creation")
 		// }
+
+
+// POST /signup_account
+// CREATE() the user account
+func SignupAccount(writer http.ResponseWriter, request *http.Request) {
+	result, err := stmt.Exec(userUUID, user.Name, user.Email, Encrypt(user.Password), createdAt)
+	if err != nil {
+		fmt.Println("Error during user creation:", err)
+		return err
+	}
+	
+	// Get the last inserted ID
+	lastId, err := result.LastInsertId()
+	if err != nil {
+		fmt.Println("Error getting last insert ID:", err)
+		return err
+	}
+	
+	// Set the user fields
+	user.Id = int(lastId)
+	user.Uuid = userUUID
+	user.CreatedAt = createdAt
+	
+	return

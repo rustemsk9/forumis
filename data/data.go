@@ -2,17 +2,26 @@ package data
 
 import (
 	"crypto/rand"
-	"crypto/sha1"
 	"database/sql"
 	"encoding/json"
 	"fmt"
 	"log"
 	"os"
 
+	"golang.org/x/crypto/bcrypt"
+
 	"forum/utils"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type LoginSkin struct {
+	Submit string
+	Signup string
+	Name     string
+	Email    string
+	Error string
+}
 
 type sqlInfo struct {
 	DriverName string
@@ -68,8 +77,16 @@ func createUUID() (uuid string) {
 	return
 }
 
-// hash plaintext with SHA-1
-func Encrypt(plainText string) (encryptedText string) {
-	encryptedText = fmt.Sprintf("%x", sha1.Sum([]byte(plainText)))
-	return
+// hash plaintext with SHA-1, changed to bcrypt as in forum instructions.
+func Encrypt(plaintext string) string {
+    hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
+    if err != nil {
+        log.Fatal(err)
+    }
+    return string(hash)
+}
+
+func CheckPassword(hashedPassword, password string) bool {
+    err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+    return err == nil
 }

@@ -10,57 +10,68 @@ import (
 	"forum/data"
 )
 
-type LoginSkin struct {
-	Submit string
-	Signup string
-
-	ErrorStr string
-}
-
 // GET /login
 // show the login page
-var ErrorStrC1 string
+var Error string
 
-func Login(writer http.ResponseWriter, request *http.Request) {
-	// t := utils.ParseTemplateFiles("login.layout", "public.navbar", "login")
-	var LS LoginSkin
-	if ErrorStrC1 != "" {
-		LS = LoginSkin{
-			"Submit",
-			"Signup",
-			ErrorStrC1,
+func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin) {
+	if request.URL.Path == "/login/success" {
+		LS = data.LoginSkin{
+			Submit: "Submit",
+			Signup: "Signup",
+			Name:   LS.Name,
+			Email:  LS.Email,
+			Error:  "Signup successful! Please log in.",
+		}
+		utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
+		Error = ""
+		return
+	} else {
+	if Error != "" {
+		LS = data.LoginSkin{
+			Submit: "Again",
+			Signup: "Signup",
+			Name:   LS.Name,
+			Email:  LS.Email,
+			Error:  Error,
 		}
 	} else {
-		LS = LoginSkin{
-			"Submit",
-			"Signup",
-			"",
+		LS = data.LoginSkin{
+			Submit: "Submit",
+			Signup: "Signup",
+			Name:   LS.Name,
+			Email:  LS.Email,
+			Error:  "",
 		}
 	}
+	
 	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
-	ErrorStrC1 = ""
-
-	// t.ExecuteTemplate(writer, LoginSkin)
+	Error = ""
+	}
 }
 
 // GET /signup
 // show the signup page
-func Signup(writer http.ResponseWriter, request *http.Request) {
-	var LS LoginSkin
-	if ErrorStrC1 != "" {
-		LS = LoginSkin{
-			"Submit",
-			"Signup",
-			ErrorStrC1,
+func Signup(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin) {
+	// var LS LoginSkin
+	if Error != "" {
+		LS = data.LoginSkin{
+			Submit: "Submit",
+			Signup: "Again",
+			Name:   LS.Name,
+			Email:  LS.Email,
+			Error:  Error,
 		}
 	} else {
-		LS = LoginSkin{
-			"Submit",
-			"Signup",
-			"",
+		LS = data.LoginSkin{
+			Submit: "Submit",
+			Signup: "Signup",
+			Name:   LS.Name,
+			Email:  LS.Email,
+			Error:  "",
 		}
 	}
-	ErrorStrC1 = ""
+	Error = ""
 	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "signup")
 }
 
@@ -68,26 +79,45 @@ func Signup(writer http.ResponseWriter, request *http.Request) {
 // create the user account
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	err := request.ParseForm() // err
-	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
-	if checkExists {
-		// fmt.Println("lol exists")
-		ErrorStrC1 = "This name/email already exists\nTry to signup again using different username/email"
-		Signup(writer, request)
-		return
-	}
-
 	if err != nil {
 		utils.Danger(err, "Cannot parse form")
 	}
-	user := data.User{
+	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
+	if checkExists {
+		// fmt.Println("lol exists")
+		Error = "This name/email already exists\nTry to signup again using different username/email"
+		user := data.LoginSkin{
+			Submit: "Try Again",
+			Signup: "Signup",
+			Name:     request.PostFormValue("name"),
+			Email:    request.PostFormValue("email"),
+			Error:   Error,
+		}
+		Signup(writer, request, user)
+		return
+	}
+
+	usertoSign := data.User{
 		Name:     request.PostFormValue("name"),
 		Email:    request.PostFormValue("email"),
 		Password: request.PostFormValue("password"),
 	}
-	if err := user.Create(); err != nil {
+	if err := usertoSign.Create(); err != nil {
+		// Error = "Internal server error\nPlease try again later"
+		// user := data.LoginSkin{
+		// 	Submit: "Try Again",
+		// 	Signup: "Signup",
+		// 	Name:     request.PostFormValue("name"),
+		// 	Email:    request.PostFormValue("email"),
+		// 	Error:   Error,
+		// }
+		// Signup(writer, request, user)
+		// return
 		utils.Danger(err, "Cannot create user")
 	}
-	http.Redirect(writer, request, "/login", 302)
+	http.Redirect(writer, request, "/login/success", 302)
+	// http.Redirect(writer, request, "/login", 302)
+	// return
 }
 
 // POST /authenticate
@@ -97,7 +127,11 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	case "GET":
 
 	case "POST":
-		request.ParseForm()
+		
+		err := request.ParseForm()
+		if err != nil {
+			utils.Danger(err, "Cannot parse form")
+		}
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
 
@@ -106,14 +140,16 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 		user, err := data.UserByEmail(email)
 		if err != nil {
 			fmt.Printf("User not found for email: %s, error: %v\n", email, err)
-			ErrorStrC1 = "You might entered wrong email/password \n Try again"
-			Login(writer, request)
+			Error = "You might entered wrong email/password \n Try again"
+			Login(writer, request, data.LoginSkin{})
 			return
 		}
 
 		fmt.Printf("Found user: %s (ID: %d)\n", user.Name, user.Id)
 
-		if user.Password == data.Encrypt(password) {
+		// tryEncrypt := data.Encrypt(password)
+
+		if data.CheckPassword(user.Password, password) {
 			fmt.Println("Password correct, checking existing session...")
 
 			_, err = data.SessionCheck(writer, request)
@@ -149,8 +185,8 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 			http.Redirect(writer, request, "/", 302)
 		} else {
 			fmt.Printf("Password incorrect for user: %s\n", user.Name)
-			ErrorStrC1 = "You might entered wrong email/password \n Try again"
-			Login(writer, request)
+			Error = "You might entered wrong email/password \n Try again"
+			Login(writer, request, data.LoginSkin{})
 		}
 	}
 }

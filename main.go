@@ -8,6 +8,7 @@ import (
 	"strings"
 	"time"
 
+	"forum/data"
 	"forum/utils"
 
 	"forum/routes"
@@ -54,16 +55,21 @@ func main() {
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(config.Static))
 	mux.Handle("/static/", http.StripPrefix("/static/", files))
-
+	dataLS := data.LoginSkin{}
 	mapper := map[string]func(http.ResponseWriter, *http.Request){
 		// defined in route/index.go
 		"/":    routes.Index,
 		"/err": routes.Err,
 
 		// defined in route/auth.go
-		"/login":          routes.Login,
-		"/logout":         routes.Logout,
-		"/signup":         routes.Signup,
+		"/login/":  func(writer http.ResponseWriter, request *http.Request) {
+			routes.Login(writer, request, dataLS)
+		},
+		"/logout": routes.Logout,
+		"/signup": func(w http.ResponseWriter, r *http.Request) {
+			routes.Signup(w, r, dataLS)
+		},
+		
 		"/signup_account": routes.SignupAccount,
 		"/authenticate":   routes.Authenticate,
 
@@ -76,16 +82,6 @@ func main() {
 		// account cabinet
 		"/account":      routes.ReadThreadsFromAccount,
 		"/accountcheck": routes.AccountCheck,
-
-		// like handlers
-		// "/likes":         routes.PostLike,
-		// "/likes/accept":  routes.AcceptLike,
-		// "/likes/dislike": routes.AcceptDislike,
-
-		// threadlikes
-		// "/threadLikes": routes.ThreadLikes,
-		// "/threadLikes/accept":  routes.ApplyThreadLikes,
-		// "/threadLikes/dislike": routes.ApplyThreadDislikes,
 
 		// debug routes
 		"/debug":             routes.DebugPage,

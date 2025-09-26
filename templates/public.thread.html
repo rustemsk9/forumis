@@ -1,21 +1,22 @@
 {{ define "content" }}
 <h4>public</h4>
 <div class="panel panel-default">
-  <div class="panel-heading " style="background-color: wheat">
-    <span  class="lead text-break"> <i class="fa fa-comment-o"> {{ .Topic }}</i></span>
+  <div class="panel-heading" style="background-color: wheat">
+    <span class="lead text-break">
+      <i class="fa fa-comment-o"> {{ .Topic }}</i></span
+    >
     <div class="pull-right">
       Started by {{ .User.Name }} - {{ .CreatedAtDate }}
       <!-- Thread like/dislike iframe -->
     </div>
-
   </div>
-  
+
   {{ range .Posts }}
-  <div class="card mb-3 d-flex ">
+  <div class="card mb-3 d-flex">
     <div class="card-body d-flex text-break justify-content-between">
       <div class="d-flex flex-column">
         <div>
-          <i class="fa fa-comment me-2"></i>
+          <a class="fa fa-comment me-2"></a>
           {{ .Body }}
         </div>
         <div class="text-muted small">
@@ -24,8 +25,7 @@
       </div>
     </div>
   </div>
-  {{ end }}    
-
+  {{ end }}
 </div>
 
 {{ end }}

@@ -1,26 +1,40 @@
 {{ define "content" }}
+<a href="/" style="text-decoration: none; color: inherit;"></a>
 <div id="myBtnContainer">
-  <button class="btn active" onclick="filterSelection('all')">Show all</button>
-  <button class="btn" onclick="filterSelection('Sports')">Sports</button>
-  <button class="btn" onclick="filterSelection('Movies')">Movies</button>
-  <button class="btn" onclick="filterSelection('Games')">Games</button>
-  <button class="btn" onclick="filterSelection('Other')">Other</button>
+<a class="medium">{{.Title}}</a><a class="small">{{ .User }} </a><a class="small">Total users: {{ .Count }}</a> <a class="small"> Users online: {{ .Online }} </a>
 </div>
 <p class="lead">
   <a href="/thread/new">Start a thread</a> or join one below!
 </p>
+<form method="post" action="/">
+  <select name="selection1">
+    <option value="">None</option>
+    <option value="Sports">Sports</option>
+    <option value="Movies">Movies</option>
+    <option value="Games">Games</option>
+    <option value="Other">Other</option>
+  </select>
+  <select name="selection2">
+    <option value="">None</option>
+    <option value="Sports">Sports</option>
+    <option value="Movies">Movies</option>
+    <option value="Games">Games</option>
+    <option value="Other">Other</option>
+  </select>
+  <button type="submit" class="btn btn-primary">Filter</button>
+  <a href="/" class="btn btn-secondary">Show All</a>
+</form>
+<!-- <div class="container1"> -->
+{{ range .Threads }}
 
-<div class="container1">
-{{ range . }}
-
-<div class="filterDiv {{ .Category }}">
-  {{ .Category }}
+<div class="filterDiv {{ .Category1 }} {{ .Category2 }}">
+  {{ .Category1 }}{{ if and .Category1 .Category2 }}, {{ end }}{{ .Category2 }}
   <br>
   <div class="card shadow-sm mb-3" style="border-bottom: solid 2px black;">
     <div class="card-header bg-light text-break d-flex justify-content-between">
       <span class="lead"><i class="fa fa-comments-o"> {{ .Topic }}</i></span>
     </div>
-    <div class="card-body p-2">
+    <div class="d-flex justify-content-between align-items-center me-2 p-2">
       <div class="small">Started by <a class="medium" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.</div>
       <!-- <div class=""> -->
         <!-- </div> -->
@@ -36,7 +50,7 @@
       </div>
     </div>
   </div>
-</div>
+<!-- </div> -->
 {{ end }}
 </div>
 <script>

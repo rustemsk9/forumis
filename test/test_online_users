@@ -1,0 +1,23 @@
+package main
+
+import (
+	"fmt"
+	"forum/data"
+	"log"
+)
+
+func main() {
+	// Initialize database connection
+	data.Init()
+	
+	// Check for online users (active within last 5 minutes)
+	onlineUsers, err := data.CheckOnlineUsers(5)
+	if err != nil {
+		log.Fatal("Failed to check online users:", err)
+	}
+	
+	fmt.Printf("Found %d online users:\n", len(onlineUsers))
+	for _, user := range onlineUsers {
+		fmt.Printf("- %s (%s)\n", user.Name, user.Email)
+	}
+}

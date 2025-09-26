@@ -7,10 +7,34 @@
     </i>
   </h2>
   <div class="lead">Sign up for an account below</div>
-  <input id="name" type="text" name="name" class="form-control" placeholder="Name" required autofocus/>
-  <input type="email" name="email" class="form-control" placeholder="Email address" required/>
-  <input type="password" name="password" class="form-control" placeholder="Password" required/>
-  <button class="btn btn-lg btn-primary btn-block" type="submit">Sign up</button>
+  <input
+    id="name"
+    type="text"
+    name="name"
+    class="form-control"
+    placeholder="Name"
+    required
+    autofocus
+    value="{{ if .Name }}{{ .Name }}{{ end }}"
+  />
+  <input
+    type="email"
+    name="email"
+    class="form-control"
+    placeholder="Email address"
+    required
+    value="{{ if .Email }}{{ .Email }}{{ end }}"
+  />
+  <input
+    type="password"
+    name="password"
+    class="form-control"
+    placeholder="Password"
+    required
+  />
+  <button class="btn btn-lg btn-primary btn-block" type="submit">
+    {{ if .Signup }}{{ .Signup }}{{ else }}Signup{{ end }}
+  </button>
 </form>
-<pre style="margin-left: 180px;">{{ .ErrorStr }}</pre>
+<pre style="margin-left: 180px">{{ .Error }}</pre>
 {{ end }}

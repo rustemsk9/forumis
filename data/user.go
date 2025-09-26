@@ -2,6 +2,7 @@ package data
 
 import (
 	"fmt"
+	"net/http"
 	"time"
 )
 
@@ -17,8 +18,8 @@ type User struct {
 }
 
 // create a new thread
-func (user *User) CreateThread(topic string, alsoid int, category string) (soid int64, conv Thread, err error) {
-	res, err := Db.Exec("INSERT INTO threads(uuid, topic, user_id, created_at, category) VALUES(?, ?, ?, ?, ?)", createUUID(), topic, alsoid, time.Now(), category)
+func (user *User) CreateThread(topic string, alsoid int, category1 string, category2 string) (soid int64, conv Thread, err error) {
+	res, err := Db.Exec("INSERT INTO threads(uuid, topic, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?)", createUUID(), topic, alsoid, time.Now(), category1, category2)
 	if err != nil {
 		panic(err)
 	}
@@ -97,14 +98,18 @@ func (user *User) CreateSession() (session Session, err error) {
 
 	// Insert session with cookie_string field
 	stmt, err := Db.Prepare(
-		"INSERT INTO sessions(uuid, email, user_id, created_at, cookie_string) VALUES(?, ?, ?, ?, ?)")
+		"INSERT INTO sessions(uuid, email, user_id, created_at, cookie_string, active_last) VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
 		return
 	}
 	defer stmt.Close()
 
+	// Calculate current time as hour*100 + minute
+	now := time.Now()
+	currentTime := now.Hour()*100 + now.Minute()
+
 	// Execute the INSERT statement
-	_, err = stmt.Exec(sessionUUID, user.Email, user.Id, time.Now(), cookieString)
+	_, err = stmt.Exec(sessionUUID, user.Email, user.Id, time.Now(), cookieString, currentTime)
 	if err != nil {
 		return
 	}
@@ -124,8 +129,8 @@ func (user *User) CreateSession() (session Session, err error) {
 // get the session for an existing user
 func (user *User) Session() (session Session, err error) {
 	session = Session{}
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string FROM sessions WHERE user_id=?", user.Id).
-		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString)
+	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE user_id=?", user.Id).
+		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
 	return
 }
 
@@ -134,11 +139,16 @@ func (user *User) Create() (err error) {
 	stmt, err := Db.Prepare(
 		"INSERT INTO users(uuid, name, email, password, created_at) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
-		return
+		fmt.Println("Error preparing statement:", err)
+		return err
 	}
 	defer stmt.Close()
 	err = stmt.QueryRow(createUUID(), user.Name, user.Email, Encrypt(user.Password), time.Now()).
 		Scan(&user.Id, &user.Uuid, &user.CreatedAt)
+	if err != nil {
+		fmt.Println("Error during user creation:", err)
+		return err
+	}
 	return
 }
 
@@ -168,6 +178,21 @@ func (user *User) Update() (err error) {
 // delete all users from database
 func UserDeleteAll() (err error) {
 	_, err = Db.Exec("DELETE FROM users")
+	return
+}
+
+func CurrentUser(request *http.Request) (name string, err error) {
+	// get from DB the user from the session
+	session, err := SessionCheck(nil, request)
+	if err != nil {
+		return
+	}
+	user, err := session.User()
+	if err != nil {
+		fmt.Println("Error session.User() in CurrentUser")
+		return
+	}
+	name = user.Name
 	return
 }
 

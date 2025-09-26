@@ -13,7 +13,10 @@ Created at : {{ slice (print $user.CreatedAt) 0 16 }}
       <i class="fa fa-comment-o"></i> {{ .Topic }}</span
     >
   </div>
-  <div class="panel-body">
+  <div
+    class="container-lg p-2 shadow-sm"
+    style="border-bottom: solid 2px black"
+  >
     Started by
     <a class="lead" href="/account?user_id={{.UserId}}">{{ .User.Name }}</a> -
     {{ .CreatedAtDate }} - {{ .NumReplies }} posts.

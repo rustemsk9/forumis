@@ -34,14 +34,23 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 		if err != nil {
 			utils.Danger(err, "Cannot parse form")
 		}
-		selected := request.PostFormValue("selection")
+		topic := request.PostFormValue("topic")
+		selected := request.PostFormValue("selection1")
+		selected2 := request.PostFormValue("selection2")
+		if selected == "" && selected2 == "" {
+			// http.Redirect(writer, request, "/thread/new", 302)
+			utils.ErrorMessage(writer, request, "Please select at least one option.")
+				// url := []string{"/err?msg=", msg}
+	// http.Redirect(writer, request, strings.Join(url, ""), 302)
+			return
+		}
 		user, err := sess.User()
 		if err != nil {
 			utils.Danger(err, "Cannot get user from session")
 		}
 		alsoid := data.GetCookieValue(request)
-		topic := request.PostFormValue("topic")
-		_, _, err = user.CreateThread(topic, alsoid, selected)
+		
+		_, _, err = user.CreateThread(topic, alsoid, selected, selected2)
 		if err != nil {
 			utils.Danger(err, "Cannot create thread")
 		}
