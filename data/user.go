@@ -18,8 +18,8 @@ type User struct {
 }
 
 // create a new thread
-func (user *User) CreateThread(topic string, alsoid int, category1 string, category2 string) (soid int64, conv Thread, err error) {
-	res, err := Db.Exec("INSERT INTO threads(uuid, topic, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?)", createUUID(), topic, alsoid, time.Now(), category1, category2)
+func (user *User) CreateThread(topic string, body string, alsoid int, category1 string, category2 string) (soid int64, conv Thread, err error) {
+	res, err := Db.Exec("INSERT INTO threads(uuid, topic, body, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?, ?)", createUUID(), topic, body, alsoid, time.Now(), category1, category2)
 	if err != nil {
 		panic(err)
 	}

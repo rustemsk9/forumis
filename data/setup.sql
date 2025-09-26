@@ -31,6 +31,7 @@ CREATE TABLE threads (
   id         INTEGER PRIMARY KEY AUTOINCREMENT,
   uuid       varchar(64) not null unique,
   topic      text,
+  body       text,
   user_id    integer references users(id),
   created_at timestamp not null,
   category1  varchar(255) default '',

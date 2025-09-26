@@ -3,10 +3,8 @@ package data
 import (
 	"crypto/rand"
 	"database/sql"
-	"encoding/json"
 	"fmt"
 	"log"
-	"os"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -18,9 +16,9 @@ import (
 type LoginSkin struct {
 	Submit string
 	Signup string
-	Name     string
-	Email    string
-	Error string
+	Name   string
+	Email  string
+	Error  string
 }
 
 type sqlInfo struct {
@@ -34,27 +32,10 @@ var info sqlInfo
 var Db *sql.DB
 
 func init() {
-	// loadSqlInfo()
 	var err error
-	// Must to be append '?parseTime=true' after the 'dataSourceName',
-	// or it will occur 'unsupported Scan, storing driver.Value type []uint8 into type *time.Time'
-	// dataSourceName := fmt.Sprintf("%s:%s@/%s?parseTime=true", info.Username, info.Password, info.Database)
 	Db, err = sql.Open("sqlite3", "mydb.db")
 	if err != nil {
 		log.Fatal(err)
-	}
-}
-
-func loadSqlInfo() {
-	file, err := os.Open("data/sql.json")
-	if err != nil {
-		utils.Danger("Cannot open sql file", err)
-	}
-	decoder := json.NewDecoder(file)
-	info = sqlInfo{}
-	err = decoder.Decode(&info)
-	if err != nil {
-		utils.Danger("Cannot get configuration from file", err)
 	}
 }
 
@@ -79,14 +60,14 @@ func createUUID() (uuid string) {
 
 // hash plaintext with SHA-1, changed to bcrypt as in forum instructions.
 func Encrypt(plaintext string) string {
-    hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
-    if err != nil {
-        log.Fatal(err)
-    }
-    return string(hash)
+	hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(hash)
 }
 
 func CheckPassword(hashedPassword, password string) bool {
-    err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
-    return err == nil
+	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
+	return err == nil
 }

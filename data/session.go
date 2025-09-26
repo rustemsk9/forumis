@@ -23,14 +23,14 @@ func (session *Session) Valid() (valid bool, err error) {
 	// Calculate current time as hour*100 + minute (e.g., 14:30 = 1430)
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
-	
+
 	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE uuid=?", session.Uuid).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
 	if err != nil {
 		valid = false
 		return
 	}
-	
+
 	// fmt.Println(session.Uuid) // Removed debug print
 	if session.Id != 0 {
 		valid = true
@@ -112,49 +112,49 @@ func CheckOnlineUsers(considerOnline int) ([]User, error) {
 	var users []User
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
-	
+
 	// Query to get active sessions with user information
 	query := `
 		SELECT DISTINCT u.id, u.uuid, u.name, u.email, u.created_at, s.active_last
 		FROM users u 
 		INNER JOIN sessions s ON u.id = s.user_id 
 		WHERE s.active_last > 0`
-	
+
 	rows, err := Db.Query(query)
 	if err != nil {
 		return users, err
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var user User
 		var activeLast int
-		
+
 		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &activeLast)
 		if err != nil {
 			continue
 		}
-		
+
 		// Calculate time difference in minutes
 		// Handle hour rollover (e.g., from 23:59 to 00:05)
 		var timeDiff int
 		if currentTime >= activeLast {
 			// Same day
-			hourDiff := (currentTime/100) - (activeLast/100)
-			minuteDiff := (currentTime%100) - (activeLast%100)
+			hourDiff := (currentTime / 100) - (activeLast / 100)
+			minuteDiff := (currentTime % 100) - (activeLast % 100)
 			timeDiff = hourDiff*60 + minuteDiff
 		} else {
 			// Hour rollover (next day)
-			hourDiff := (24 + currentTime/100) - (activeLast/100)
-			minuteDiff := (currentTime%100) - (activeLast%100)
+			hourDiff := (24 + currentTime/100) - (activeLast / 100)
+			minuteDiff := (currentTime % 100) - (activeLast % 100)
 			timeDiff = hourDiff*60 + minuteDiff
 		}
-		
+
 		// Only include users active within the specified time frame
 		if timeDiff <= considerOnline {
 			users = append(users, user)
 		}
 	}
-	
+
 	return users, nil
 }

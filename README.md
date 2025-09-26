@@ -1,9 +1,29 @@
-# casual-talk
+# Forum Application - AI Coding Instructions
 
-Build a forum in Go. Learn from [gwp](https://github.com/sausheong/gwp) and make some change.
+## Architecture Overview
+This is a Go-based forum application with a traditional web server architecture:
+- `data/` package contains database models and operations (Thread, Post, User, Session)
+- Direct SQL database operations using `database/sql` with prepared statements
+- Session-based authentication using HTTP cookies (`_cookie`)
+- Like/dislike system for both threads and posts with separate tables
 
-[![](https://img.shields.io/badge/license-MIT-yellowgreen)](./LICENSE) ![](https://img.shields.io/badge/database-MySQL-blue)
+## Key Patterns & Conventions
 
+### Database Operations
+- All database operations use prepared statements for security
+- Error handling follows pattern: log error, return early with empty/nil values
+- Query results use `defer rows.Close()` consistently
+- Database connection accessed via `Db` in data package
+
+Example pattern:
+```go
+rows, err := Db.Query("SELECT ... WHERE id=?", id)
+if err != nil {
+    fmt.Println("Error on select operation")
+    return
+}
+defer rows.Close()
+```
 
 ## How to run
 

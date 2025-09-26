@@ -34,3 +34,5 @@
 [ERROR] 2025/09/26 14:35:40 util.go:60: sql: no rows in result set Cannot create user
 [ERROR] 2025/09/26 14:40:47 util.go:60: sql: no rows in result set Cannot create user
 [ERROR] 2025/09/26 14:46:28 util.go:60: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/26 21:18:42 util.go:60: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/26 21:56:39 util.go:60: sql: no rows in result set Cannot create user

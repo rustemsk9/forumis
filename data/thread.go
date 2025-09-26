@@ -11,6 +11,7 @@ type Thread struct {
 	Id            int
 	Uuid          string
 	Topic         string
+	Body          string
 	UserId        int
 	CreatedAt     time.Time
 	Category1     string
@@ -475,14 +476,14 @@ func GetUserById(passID int) (user User) {
 
 // get all threads in the database and returns it
 func Threads() (threads []Thread, err error) {
-	rows, err := Db.Query("SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
+	rows, err := Db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
 	if err != nil {
 		return
 	}
 	defer rows.Close()
 	for rows.Next() {
 		th := Thread{}
-		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
+		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.Body, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
 			return
 		}
 		// Populate likes and dislikes counts
@@ -496,7 +497,7 @@ func Threads() (threads []Thread, err error) {
 // show /account threads created by user
 func AccountThreads(alsoid int) (threads []Thread, err error) {
 	fmt.Println("Account Threads started DB search")
-	rows, err := Db.Query("SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads WHERE user_id=?", alsoid)
+	rows, err := Db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE user_id=?", alsoid)
 	if err != nil {
 		fmt.Println("Error on AccountThreads")
 		return
@@ -509,7 +510,7 @@ func AccountThreads(alsoid int) (threads []Thread, err error) {
 	// }
 	for rows.Next() {
 		th := Thread{}
-		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
+		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.Body, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
 			return
 		}
 		threads = append(threads, th)
@@ -524,33 +525,33 @@ func AccountThreads(alsoid int) (threads []Thread, err error) {
 func FilterThreadsByCategories(category1, category2 string) (threads []Thread, err error) {
 	var query string
 	var args []interface{}
-	
+
 	if category1 == "" && category2 == "" {
 		// If both are empty/None, return all threads
 		return Threads()
 	} else if category1 != "" && category2 != "" {
 		// Both categories specified - find threads that have EITHER category
-		query = "SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads WHERE (category1 = ? OR category2 = ?) OR (category1 = ? OR category2 = ?) ORDER BY created_at DESC"
+		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE (category1 = ? OR category2 = ?) OR (category1 = ? OR category2 = ?) ORDER BY created_at DESC"
 		args = []interface{}{category1, category1, category2, category2}
 	} else if category1 != "" {
 		// Only category1 specified - search in both columns
-		query = "SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads WHERE category1 = ? OR category2 = ? ORDER BY created_at DESC"
+		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1 = ? OR category2 = ? ORDER BY created_at DESC"
 		args = []interface{}{category1, category1}
 	} else {
 		// Only category2 specified - search in both columns
-		query = "SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads WHERE category1 = ? OR category2 = ? ORDER BY created_at DESC"
+		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1 = ? OR category2 = ? ORDER BY created_at DESC"
 		args = []interface{}{category2, category2}
 	}
-	
+
 	rows, err := Db.Query(query, args...)
 	if err != nil {
 		return
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		th := Thread{}
-		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
+		if err = rows.Scan(&th.Id, &th.Uuid, &th.Topic, &th.Body, &th.UserId, &th.CreatedAt, &th.Category1, &th.Category2); err != nil {
 			return
 		}
 		// Populate likes and dislikes counts
@@ -635,8 +636,8 @@ func GetLikesPostsFromDB(allIds []int) (posts []Post, err error) {
 // get a thread by the UUID
 func ThreadById(id int) (conv Thread, err error) {
 	conv = Thread{}
-	err = Db.QueryRow("SELECT id, uuid, topic, user_id, created_at FROM threads WHERE id=?", id).
-		Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.UserId, &conv.CreatedAt)
+	err = Db.QueryRow("SELECT id, uuid, topic, body, user_id, created_at FROM threads WHERE id=?", id).
+		Scan(&conv.Id, &conv.Uuid, &conv.Topic, &conv.Body, &conv.UserId, &conv.CreatedAt)
 
 	return
 }
