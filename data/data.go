@@ -29,7 +29,7 @@ type sqlInfo struct {
 }
 
 var info sqlInfo
-var Db *sql.DB
+var Db *sql.DB // Temporary global for backward compatibility
 
 func init() {
 	var err error

@@ -23,11 +23,8 @@ type Configuration struct {
 	Static       string
 }
 
-var (
-	config        Configuration
-	err           error
-	Authenticated = false
-)
+var config        Configuration
+	
 
 func init() {
 	file, err := os.Open("config.json")
@@ -51,45 +48,62 @@ func init() {
 }
 
 func main() {
+	// Initialize database manager
+	dbManager, err := data.NewDatabaseManager("mydb.db")
+	if err != nil {
+		utils.Danger("Cannot initialize database manager", err)
+		return
+	}
+	defer dbManager.Close()
 
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(config.Static))
 	mux.Handle("/static/", http.StripPrefix("/static/", files))
+	
+	// Create base middleware chain that applies to all routes
+	baseChain := routes.Chain(
+		routes.WithLogging(),
+		routes.WithDatabaseManager(dbManager),
+		routes.WithAuthentication(),
+	)
+	
+	// Create authenticated routes chain
+	authChain := routes.Chain(
+		routes.WithLogging(),
+		routes.WithDatabaseManager(dbManager),
+		routes.WithAuthentication(),
+		routes.RequireAuth(),
+	)
+
 	dataLS := data.LoginSkin{}
-	mapper := map[string]func(http.ResponseWriter, *http.Request){
-		// defined in route/index.go
-		"/":    routes.Index,
-		"/err": routes.Err,
+	
+	// Public routes (no authentication required)
+	mux.HandleFunc("/", baseChain(routes.Index))
+	mux.HandleFunc("/err", baseChain(routes.Err))
+	mux.HandleFunc("/login/", baseChain(func(w http.ResponseWriter, r *http.Request) {
+		routes.Login(w, r, dataLS)
+	}))
+	mux.HandleFunc("/signup", baseChain(func(w http.ResponseWriter, r *http.Request) {
+		routes.Signup(w, r, dataLS)
+	}))
+	mux.HandleFunc("/signup_account", baseChain(routes.SignupAccount))
+	mux.HandleFunc("/authenticate", baseChain(routes.Authenticate))
+	mux.HandleFunc("/logout", baseChain(routes.Logout))
 
-		// defined in route/auth.go
-		"/login/":  func(writer http.ResponseWriter, request *http.Request) {
-			routes.Login(writer, request, dataLS)
-		},
-		"/logout": routes.Logout,
-		"/signup": func(w http.ResponseWriter, r *http.Request) {
-			routes.Signup(w, r, dataLS)
-		},
-		
-		"/signup_account": routes.SignupAccount,
-		"/authenticate":   routes.Authenticate,
-
-		// defined in route/thread.go
-		"/thread/new":    routes.NewThread,
-		"/thread/create": routes.CreateThread,
-		"/thread/post":   routes.PostThread,
-		"/thread/read":   routes.ReadThread,
-
-		// account cabinet
-		"/account":      routes.ReadThreadsFromAccount,
-		"/accountcheck": routes.AccountCheck,
-
-		// debug routes
-		"/debug":             routes.DebugPage,
-		"/debug/cookie-test": routes.DebugCookieTest,
-	}
+	// Protected routes (require authentication)
+	mux.HandleFunc("/thread/new", authChain(routes.NewThread))
+	mux.HandleFunc("/thread/create", authChain(routes.CreateThread))
+	mux.HandleFunc("/thread/post", authChain(routes.PostThread))
+	
+	// Semi-protected routes (different behavior based on auth status)
+	mux.HandleFunc("/thread/read", baseChain(routes.ReadThread))
+	mux.HandleFunc("/account", baseChain(routes.ReadThreadsFromAccount))
+	mux.HandleFunc("/accountcheck", baseChain(routes.AccountCheck))
+	mux.HandleFunc("/debug", baseChain(routes.DebugPage))
 
 	// Add API routes with a custom handler for pattern matching
-	mux.HandleFunc("/api/", func(w http.ResponseWriter, r *http.Request) {
+	// API routes with middleware
+	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		// Handle thread API endpoints
@@ -119,11 +133,7 @@ func main() {
 		} else {
 			http.Error(w, "Not Found", http.StatusNotFound)
 		}
-	})
-
-	for pattern, handler := range mapper {
-		mux.HandleFunc(pattern, handler)
-	}
+	}))
 
 	server := &http.Server{
 		Addr:           config.Address,

@@ -78,20 +78,27 @@ func Signup(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin
 // POST /signup_account
 // create the user account
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
-	err := request.ParseForm() // err
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		utils.ErrorMessage(writer, request, "Database not available")
+		return
+	}
+
+	err := request.ParseForm()
 	if err != nil {
 		utils.Danger(err, "Cannot parse form")
 	}
+	
+	// Check if user already exists
 	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
 	if checkExists {
-		// fmt.Println("lol exists")
 		Error = "This name/email already exists\nTry to signup again using different username/email"
 		user := data.LoginSkin{
 			Submit: "Try Again",
 			Signup: "Signup",
-			Name:     request.PostFormValue("name"),
-			Email:    request.PostFormValue("email"),
-			Error:   Error,
+			Name:   request.PostFormValue("name"),
+			Email:  request.PostFormValue("email"),
+			Error:  Error,
 		}
 		Signup(writer, request, user)
 		return
@@ -102,32 +109,38 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 		Email:    request.PostFormValue("email"),
 		Password: request.PostFormValue("password"),
 	}
-	if err := usertoSign.Create(); err != nil {
-		// Error = "Internal server error\nPlease try again later"
-		// user := data.LoginSkin{
-		// 	Submit: "Try Again",
-		// 	Signup: "Signup",
-		// 	Name:     request.PostFormValue("name"),
-		// 	Email:    request.PostFormValue("email"),
-		// 	Error:   Error,
-		// }
-		// Signup(writer, request, user)
-		// return
+	
+	// Use database manager to create user
+	if err := dbManager.CreateUser(&usertoSign); err != nil {
 		utils.Danger(err, "Cannot create user")
+		Error = "Internal server error\nPlease try again later"
+		user := data.LoginSkin{
+			Submit: "Try Again",
+			Signup: "Signup",
+			Name:   request.PostFormValue("name"),
+			Email:  request.PostFormValue("email"),
+			Error:  Error,
+		}
+		Signup(writer, request, user)
+		return
 	}
+	
 	http.Redirect(writer, request, "/login/success", 302)
-	// http.Redirect(writer, request, "/login", 302)
-	// return
 }
 
 // POST /authenticate
 // authenticate the user given the email and password
 func Authenticate(writer http.ResponseWriter, request *http.Request) {
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		utils.ErrorMessage(writer, request, "Database not available")
+		return
+	}
+
 	switch request.Method {
 	case "GET":
-
+		// Handle GET if needed
 	case "POST":
-		
 		err := request.ParseForm()
 		if err != nil {
 			utils.Danger(err, "Cannot parse form")
@@ -137,7 +150,8 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 
 		fmt.Printf("Login attempt for email: %s\n", email)
 
-		user, err := data.UserByEmail(email)
+		// Use database manager to get user
+		user, err := dbManager.GetUserByEmail(email)
 		if err != nil {
 			fmt.Printf("User not found for email: %s, error: %v\n", email, err)
 			Error = "You might entered wrong email/password \n Try again"
@@ -147,21 +161,19 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 
 		fmt.Printf("Found user: %s (ID: %d)\n", user.Name, user.Id)
 
-		// tryEncrypt := data.Encrypt(password)
-
 		if data.CheckPassword(user.Password, password) {
 			fmt.Println("Password correct, checking existing session...")
 
-			_, err = data.SessionCheck(writer, request)
-			if err == nil {
+			// Check if user already has a session from middleware
+			if IsAuthenticated(request) {
 				fmt.Println("Existing valid session found, redirecting to home")
 				http.Redirect(writer, request, "/", 302)
 				return
 			}
 
 			fmt.Println("Creating new session...")
-			// Create session and get the session object
-			session, err := user.CreateSession()
+			// Create session using database manager
+			session, err := dbManager.CreateSession(&user)
 			if err != nil {
 				fmt.Printf("Failed to create session: %v\n", err)
 				utils.Danger(err, "Cannot create session")

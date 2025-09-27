@@ -232,26 +232,38 @@ func LikePost(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Get the post
-	post, err := data.PostById(postId)
+	// Get database manager
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the post exists
+	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
 		http.Error(writer, "Post not found", http.StatusNotFound)
 		return
 	}
 
 	// Apply the like using smart function
-	err = data.SmartApplyPostLike(userId, postId)
+	err = dbManager.SmartApplyPostLike(userId, postId)
 	if err != nil {
 		http.Error(writer, "Failed to process like", http.StatusInternalServerError)
 		return
 	}
 
 	// Return updated counts with vote status
+	likes, _ := dbManager.GetPostLikesCount(postId)
+	dislikes, _ := dbManager.GetPostDislikesCount(postId)
+	userLiked, _ := dbManager.HasUserLikedPost(userId, postId)
+	userDisliked, _ := dbManager.HasUserDislikedPost(userId, postId)
+	
 	status := ThreadVoteStatus{
-		Likes:        post.GetLikesCount(),
-		Dislikes:     post.GetDislikesCount(),
-		UserLiked:    data.HasUserLikedPost(userId, postId),
-		UserDisliked: data.HasUserDislikedPost(userId, postId),
+		Likes:        likes,
+		Dislikes:     dislikes,
+		UserLiked:    userLiked,
+		UserDisliked: userDisliked,
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
@@ -287,26 +299,38 @@ func DislikePost(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Get the post
-	post, err := data.PostById(postId)
+	// Get database manager
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the post exists
+	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
 		http.Error(writer, "Post not found", http.StatusNotFound)
 		return
 	}
 
 	// Apply the dislike using smart function
-	err = data.SmartApplyPostDislike(userId, postId)
+	err = dbManager.SmartApplyPostDislike(userId, postId)
 	if err != nil {
 		http.Error(writer, "Failed to process dislike", http.StatusInternalServerError)
 		return
 	}
 
 	// Return updated counts with vote status
+	likes, _ := dbManager.GetPostLikesCount(postId)
+	dislikes, _ := dbManager.GetPostDislikesCount(postId)
+	userLiked, _ := dbManager.HasUserLikedPost(userId, postId)
+	userDisliked, _ := dbManager.HasUserDislikedPost(userId, postId)
+	
 	status := ThreadVoteStatus{
-		Likes:        post.GetLikesCount(),
-		Dislikes:     post.GetDislikesCount(),
-		UserLiked:    data.HasUserLikedPost(userId, postId),
-		UserDisliked: data.HasUserDislikedPost(userId, postId),
+		Likes:        likes,
+		Dislikes:     dislikes,
+		UserLiked:    userLiked,
+		UserDisliked: userDisliked,
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
@@ -333,19 +357,36 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	// Get user ID from cookie
 	userId := data.GetCookieValue(request)
 
-	// Get the post to access its methods
-	post, err := data.PostById(postId)
+	// Get database manager
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		return
+	}
+
+	// Verify the post exists
+	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
 		http.Error(writer, "Post not found", http.StatusNotFound)
 		return
 	}
 
+	// Get counts and user vote status
+	likes, _ := dbManager.GetPostLikesCount(postId)
+	dislikes, _ := dbManager.GetPostDislikesCount(postId)
+	
+	var userLiked, userDisliked bool
+	if userId > 0 {
+		userLiked, _ = dbManager.HasUserLikedPost(userId, postId)
+		userDisliked, _ = dbManager.HasUserDislikedPost(userId, postId)
+	}
+
 	// Return vote status (even for unauthenticated users, just without personal vote info)
 	status := ThreadVoteStatus{
-		Likes:        post.GetLikesCount(),
-		Dislikes:     post.GetDislikesCount(),
-		UserLiked:    userId > 0 && data.HasUserLikedPost(userId, postId),
-		UserDisliked: userId > 0 && data.HasUserDislikedPost(userId, postId),
+		Likes:        likes,
+		Dislikes:     dislikes,
+		UserLiked:    userLiked,
+		UserDisliked: userDisliked,
 	}
 
 	writer.Header().Set("Content-Type", "application/json")
