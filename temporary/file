@@ -36,3 +36,5 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
     <option value="">Sort by Date (Newest)</option>
     <option value="likes" {{ if eq .SortBy "likes" }}selected{{ end }}>Sort by Most Likes</option>
   </select>
+
+  <script src="/static/js/cookie-debug.js"></script>

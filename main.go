@@ -106,7 +106,7 @@ func main() {
 
 	// Add API routes with a custom handler for pattern matching
 	// API routes with middleware
-	mux.HandleFunc("/api/", authChain(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		// Handle thread API endpoints

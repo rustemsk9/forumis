@@ -1,6 +1,6 @@
 {{ define "content" }}
 <section>
-  <div class="d-flex p-2 shadow-sm pull-right" style="padding-right: 140px">
+  <div class="d-flex p-2 pull-right" style="margin-right: 140px">
     <a>
       <h4>Account Info:</h4>
       {{ if . }} {{ $user := (index . 0) }} Name : {{ $user.User }}
@@ -14,17 +14,14 @@
   <div class="container-lg p-2" style="padding-top: 150px">
     <h4>User Threads:</h4>
     {{ range . }}
-    <div class="panel panel-default">
+    <div class="panel panel-default p-2">
       <div class="panel-heading">
         <span class="lead text-break">
           <i class="fa fa-comment-o"></i>
           {{ .Topic }}
         </span>
       </div>
-      <div
-        class="container-lg p-2 shadow-sm"
-        style="border-bottom: solid 2px black"
-      >
+      <div class="container-lg p-2 shadow-sm" style="border-bottom: solid 2px black">
         Started by
         <a class="lead" href="/account?user_id={{.UserId}}">{{ .User }}</a>
         - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.

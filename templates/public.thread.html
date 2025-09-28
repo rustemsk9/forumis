@@ -1,18 +1,25 @@
 {{ define "content" }}
 
-<section style="margin-top: 20px; margin-top: 150px">>
+<section style="margin-top: 180px">
   <h5>Public </h5>
   <div id="starter"></div>
   <div class="panel panel-default">
-    <div class="panel-heading">
-      <div style="background-color: wheat" class="lead text-break">
+      <i>Topic</i>
+      <div style="background-color: wheat" class="card-header lead text-break bg-light d-flex">
         <i class="lead">{{ .Topic }}</i><br>
       </div>
-      <div style="background-color: wheat" class="text-break"></div>
-        <text class="small">{{ .Body }}</text>
+      <i>Text</i>
+        <div style="background-color: wheat" class="text-break card-body">
+
+          <text class="small">{{ .Body }}</text>
+        </div>
         <br>
+        </div>
+        <div class="pull-right small">
+          Started by {{ .User }} - {{ .CreatedAtDate }} {{ $v := .Id }}
+        </div>
       </div>
-    </div>
+    
   </div>
 
   <br />
@@ -73,12 +80,5 @@
       alt="Separator"
     />
   </div>
-  <script>  
-    function likePost(id) {
-     alert("Unauthorised, Login to use this function")
-    }
-    function dislikePost(id) {
-     alert("Unauthorised, Login to use this function")
-    }
-  </script>
+  <script src="/static/js/thread-onlypost-like-api.js"></script>
 {{ end }}

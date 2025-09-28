@@ -32,16 +32,17 @@ type Session struct {
 }
 
 type Thread struct {
-	Id             int
-	Uuid           string
-	Topic          string
-	Body           string
-	UserId         int
-	User           string
-	Email          string
-	CreatedAt      time.Time
-	CreatedAtDate  string
-	NumReplies     int
+	Id            int
+	Uuid          string
+	Topic         string
+	Body          string
+	UserId        int
+	User          string
+	Email         string
+	CreatedAt     time.Time
+	CreatedAtDate string
+	NumReplies    int
+	Len           int
 	//
 	Cards          []Post
 	LikedPosts     []Post

@@ -1,12 +1,18 @@
 {{ define "content" }}
-<h4> Account Info: </h4>
+<div class="d-flex p-2 pull-right" style="margin-right: 140px">
+  <a>
+    <h4>Account Info:</h4>
 
-    Name : {{ .Name }} <br>
-    Email : {{ .Email }} <br>
+    Name : {{ .Name }}
+    <br />
+    Email : {{ .Email }}
+    <br />
     Created at : {{ slice (print .CreatedAt) 0 16 }}
-    
-    <div style="margin-top: 50px;"><h5>Threads were not found</h5></div>
+  </a>
+</div>
+<div class="container-lg p-2" style="padding-top: 150px">
+  <div style="margin-top: 50px"><h5>Threads were not found</h5></div>
 
-    <div style="margin-top: 50px;"><h5>Posts and Likes were not found</h5></div>
-    
+  <div style="margin-top: 50px"><h5>Posts and Likes were not found</h5></div>
+</div>
 {{ end }}

@@ -12,7 +12,7 @@ import (
 // shows the error message page
 func Err(writer http.ResponseWriter, request *http.Request) {
 	vals := request.URL.Query()
-	
+
 	// Use middleware to check authentication
 	if IsAuthenticated(request) {
 		utils.GenerateHTML(writer, vals.Get("msg"), "layout", "private.navbar", "error")
@@ -32,14 +32,16 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 	var err error
 	category1, category2 := "", ""
 	sortBy := ""
+	reset := "false"
 	catbool := false
 	// Check if this is a POST request with filter parameters
 	if request.Method == "POST" {
+		fmt.Println("POST request received for filtering/sorting")
 		err = request.ParseForm()
 		if err == nil {
 			category1 = request.PostFormValue("selection1")
 			category2 = request.PostFormValue("selection2")
-			sortBy = request.PostFormValue("sort_by")
+			sortBy = request.URL.Query().Get("sort")
 
 			// Save user preferences if user is authenticated
 			if IsAuthenticated(request) {
@@ -51,23 +53,41 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 					}
 				}
 			}
-			
+
 			// Handle sorting and filtering
 			if category1 != "" || category2 != "" {
+				fmt.Println("Filtering by categories:", category1, category2)
 				threads, err = data.FilterThreadsByCategories(category1, category2)
-			} else if sortBy == "likes" {
-				threads, err = dbManager.GetAllThreadsByLikes()
+				catbool = true
+
 			} else {
+				fmt.Println("No filters applied, showing all threads")
 				threads, err = dbManager.GetAllThreads()
+				catbool = false
 			}
+
+			if sortBy == "most_liked" {
+				fmt.Println("Sorting by most liked")
+				threads, err = data.SortThreadsByLikesDesc(threads)
+			} else if sortBy == "latest" {
+				threads, err = data.SortThreadsByLatest(threads)
+			}
+			if err != nil {
+				fmt.Println("Error retrieving threads:", err)
+				utils.ErrorMessage(writer, request, "Error retrieving threads")
+				return
+			}
+
 		}
-	} else {
+	} else if request.Method == "GET" {
 		// GET request - check for sort parameter in URL
-		
+
 		// Load user preferred categories for authenticated users
+		userIdFind := -1
 		if IsAuthenticated(request) {
 			user := GetCurrentUser(request)
 			if user != nil {
+				userIdFind = user.Id
 				// Get fresh user data to ensure we have preferred categories
 				fullUser, userErr := dbManager.GetUserByID(user.Id)
 				if userErr == nil {
@@ -82,20 +102,49 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 
 		err = request.ParseForm()
 		if err == nil {
-			// category1 = request.PostFormValue("selection1")
-			// category2 = request.PostFormValue("selection2")
-			sortBy = request.PostFormValue("sort_by")
-		}
-		if category1 != "" || category2 != "" {
-			threads, _ = data.FilterThreadsByCategories(category1, category2)
-			catbool = true
-			
-		} else if sortBy == "likes" {
-			threads, _ = dbManager.GetAllThreadsByLikes()
+			sortBy = request.URL.Query().Get("sort")
+			reset = request.URL.Query().Get("reset")
 		} else {
-			threads, _ = dbManager.GetAllThreads()
+			utils.ErrorMessage(writer, request, "Error retrieving data on threads")
+			return
 		}
-		
+
+		if reset == "true" {
+			threads, err = dbManager.GetAllThreads()
+			catbool = true
+			category1, category2 = "", ""
+			sortBy = ""
+
+			if userIdFind != -1 {
+				err := dbManager.UpdateUserPreferences(userIdFind, category1, category2)
+				if err != nil {
+					fmt.Printf("Error updating user preferences: %v\n", err)
+				}
+			}
+		} else {
+
+			if category1 != "" || category2 != "" {
+				threads, _ = data.FilterThreadsByCategories(category1, category2)
+				catbool = true
+			} else {
+				fmt.Println("No filters applied, showing all threads GET")
+				threads, err = dbManager.GetAllThreads()
+				catbool = false
+			}
+
+			if sortBy == "most_liked" {
+				threads, err = data.SortThreadsByLikesDesc(threads)
+			} else if sortBy == "latest" {
+				threads, err = data.SortThreadsByLatest(threads)
+			}
+			if err != nil {
+				utils.ErrorMessage(writer, request, "Error retrieving threads")
+				return
+			}
+		}
+	} else {
+		utils.ErrorMessage(writer, request, "Unsupported request method")
+		return
 	}
 
 	if err == nil {
@@ -108,15 +157,15 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 
 		// Create expanded data structure
 		pageData := struct {
-			Threads []data.Thread
-			Title   string
-			Message string
-			User    string
-			Count   int
-			Online  int
+			Threads           []data.Thread
+			Title             string
+			Message           string
+			User              string
+			Count             int
+			Online            int
 			PreferedCategory1 string
 			PreferedCategory2 string
-			SortBy string
+			SortBy            string
 		}{
 			Threads: threads,
 			Title:   "Forum Home",

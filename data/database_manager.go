@@ -22,11 +22,11 @@ func NewDatabaseManager(dbPath string) (*DatabaseManager, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	// Configure connection pool for better concurrent handling
 	db.SetMaxOpenConns(10)
 	db.SetMaxIdleConns(5)
-	
+
 	return &DatabaseManager{db: db}, nil
 }
 
@@ -44,24 +44,24 @@ func (dm *DatabaseManager) GetDB() *sql.DB {
 func (dm *DatabaseManager) CreateUser(user *User) error {
 	user.Uuid = createUUID()
 	user.CreatedAt = time.Now()
-	
+
 	stmt, err := dm.db.Prepare(
 		"INSERT INTO users(uuid, name, email, password, created_at) VALUES(?, ?, ?, ?, ?)")
 	if err != nil {
 		return err
 	}
 	defer stmt.Close()
-	
+
 	result, err := stmt.Exec(user.Uuid, user.Name, user.Email, Encrypt(user.Password), user.CreatedAt)
 	if err != nil {
 		return err
 	}
-	
+
 	id, err := result.LastInsertId()
 	if err != nil {
 		return err
 	}
-	
+
 	user.Id = int(id)
 	return nil
 }
@@ -82,7 +82,7 @@ func (dm *DatabaseManager) GetUserByID(id int) (User, error) {
 
 // Update user preferred categories
 func (dm *DatabaseManager) UpdateUserPreferences(userID int, category1, category2 string) error {
-	_, err := dm.db.Exec("UPDATE users SET prefered_category1=?, prefered_category2=? WHERE id=?", 
+	_, err := dm.db.Exec("UPDATE users SET prefered_category1=?, prefered_category2=? WHERE id=?",
 		category1, category2, userID)
 	return err
 }
@@ -91,17 +91,17 @@ func (dm *DatabaseManager) UpdateUserPreferences(userID int, category1, category
 func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
 	// Delete existing sessions for this user
 	dm.db.Exec("DELETE from sessions where user_id=?", user.Id)
-	
+
 	// Create the session UUID
 	sessionUUID := createUUID()
-	
+
 	// Create cookie string value in format "userId&sessionUUID"
 	cookieString := fmt.Sprintf("%d&%s", user.Id, sessionUUID)
-	
+
 	// Calculate current time as hour*100 + minute
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
-	
+
 	// Insert session
 	stmt, err := dm.db.Prepare(
 		"INSERT INTO sessions(uuid, email, user_id, created_at, cookie_string, active_last) VALUES(?, ?, ?, ?, ?, ?)")
@@ -109,12 +109,12 @@ func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
 		return Session{}, err
 	}
 	defer stmt.Close()
-	
+
 	_, err = stmt.Exec(sessionUUID, user.Email, user.Id, time.Now(), cookieString, currentTime)
 	if err != nil {
 		return Session{}, err
 	}
-	
+
 	return Session{
 		Uuid:         sessionUUID,
 		Email:        user.Email,
@@ -127,18 +127,18 @@ func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
 
 func (dm *DatabaseManager) ValidateSession(sessionUUID string) (Session, bool, error) {
 	var session Session
-	
+
 	// Calculate current time as hour*100 + minute
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
-	
+
 	err := dm.db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE uuid=?", sessionUUID).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
-	
+
 	if err != nil {
 		return session, false, err
 	}
-	
+
 	if session.Id != 0 {
 		// Only update active_last if it's been more than 5 minutes since last update
 		// This reduces database writes and prevents locking issues
@@ -147,7 +147,7 @@ func (dm *DatabaseManager) ValidateSession(sessionUUID string) (Session, bool, e
 			// Handle day rollover (current time is next day)
 			timeDiff = (2400 + currentTime) - session.ActiveLast
 		}
-		
+
 		// Update if more than 5 minutes have passed (500 = 5 hours in our time format, 5 = 5 minutes)
 		if timeDiff >= 5 {
 			_, err = dm.db.Exec("UPDATE sessions SET active_last = ? WHERE uuid = ?", currentTime, sessionUUID)
@@ -160,7 +160,7 @@ func (dm *DatabaseManager) ValidateSession(sessionUUID string) (Session, bool, e
 		}
 		return session, true, nil
 	}
-	
+
 	return session, false, nil
 }
 
@@ -179,16 +179,16 @@ func (dm *DatabaseManager) DeleteSession(sessionUUID string) error {
 // Thread operations
 func (dm *DatabaseManager) GetAllThreads() ([]Thread, error) {
 	var threads []Thread
-	
-	rows, err := dm.db.Query("SELECT id, uuid, topic, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
+
+	rows, err := dm.db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
 	if err != nil {
 		return threads, err
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var thread Thread
-		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
+		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
 			continue
 		}
@@ -204,17 +204,17 @@ func (dm *DatabaseManager) GetAllThreads() ([]Thread, error) {
 		thread.NumReplies, _ = dm.GetThreadPostsCount(thread.Id)
 		thread.LikesCount, _ = dm.GetThreadLikesCount(thread.Id)
 		thread.DislikesCount, _ = dm.GetThreadDislikesCount(thread.Id)
-		 
+		thread.Len = len(thread.Topic)
 		threads = append(threads, thread)
 	}
-	
+
 	return threads, nil
 }
 
 // Get all threads ordered by likes count (most liked first)
 func (dm *DatabaseManager) GetAllThreadsByLikes() ([]Thread, error) {
 	var threads []Thread
-	
+
 	query := `SELECT t.id, t.uuid, t.topic, t.user_id, t.created_at, t.category1, t.category2,
 	          COALESCE(like_counts.like_count, 0) as like_count
 	          FROM threads t
@@ -224,17 +224,17 @@ func (dm *DatabaseManager) GetAllThreadsByLikes() ([]Thread, error) {
 	              GROUP BY thread_id
 	          ) like_counts ON t.id = like_counts.thread_id
 	          ORDER BY like_count DESC, t.created_at DESC`
-	
+
 	rows, err := dm.db.Query(query)
 	if err != nil {
 		return threads, err
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var thread Thread
 		var likeCount int
-		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.UserId, &thread.CreatedAt, 
+		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.UserId, &thread.CreatedAt,
 			&thread.Category1, &thread.Category2, &likeCount)
 		if err != nil {
 			continue
@@ -252,10 +252,10 @@ func (dm *DatabaseManager) GetAllThreadsByLikes() ([]Thread, error) {
 		thread.NumReplies, _ = dm.GetThreadPostsCount(thread.Id)
 		thread.LikesCount, _ = dm.GetThreadLikesCount(thread.Id)
 		thread.DislikesCount, _ = dm.GetThreadDislikesCount(thread.Id)
-		 
+
 		threads = append(threads, thread)
 	}
-	
+
 	return threads, nil
 }
 
@@ -263,45 +263,45 @@ func (dm *DatabaseManager) CheckOnlineUsers(considerOnline int) ([]User, error) 
 	var users []User
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
-	
+
 	query := `
 		SELECT DISTINCT u.id, u.uuid, u.name, u.email, u.created_at, s.active_last
 		FROM users u 
 		INNER JOIN sessions s ON u.id = s.user_id 
 		WHERE s.active_last > 0`
-	
+
 	rows, err := dm.db.Query(query)
 	if err != nil {
 		return users, err
 	}
 	defer rows.Close()
-	
+
 	for rows.Next() {
 		var user User
 		var activeLast int
-		
+
 		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &activeLast)
 		if err != nil {
 			continue
 		}
-		
+
 		// Calculate time difference in minutes
 		var timeDiff int
 		if currentTime >= activeLast {
-			hourDiff := (currentTime/100) - (activeLast/100)
-			minuteDiff := (currentTime%100) - (activeLast%100)
+			hourDiff := (currentTime / 100) - (activeLast / 100)
+			minuteDiff := (currentTime % 100) - (activeLast % 100)
 			timeDiff = hourDiff*60 + minuteDiff
 		} else {
-			hourDiff := (24 + currentTime/100) - (activeLast/100)
-			minuteDiff := (currentTime%100) - (activeLast%100)
+			hourDiff := (24 + currentTime/100) - (activeLast / 100)
+			minuteDiff := (currentTime % 100) - (activeLast % 100)
 			timeDiff = hourDiff*60 + minuteDiff
 		}
-		
+
 		if timeDiff <= considerOnline {
 			users = append(users, user)
 		}
 	}
-	
+
 	return users, nil
 }
 
@@ -554,7 +554,7 @@ func (dm *DatabaseManager) GetLikes(postID int) ([]Likes, error) {
 		}
 		likes = append(likes, like)
 	}
-	
+
 	for i := range likes {
 		likes[i].LengthOfLikes = likeLength - 1
 	}
@@ -594,7 +594,7 @@ func (dm *DatabaseManager) PrepareThreadDislikedPosts(userID, threadID int) bool
 	return dm.HasThreadDisliked(userID, threadID)
 }
 
-// Post like/dislike helper methods  
+// Post like/dislike helper methods
 func (dm *DatabaseManager) PrepareLikedPosts(userID, postID int) bool {
 	var count int
 	err := dm.db.QueryRow("SELECT COUNT(*) FROM likedposts WHERE user_id=? AND post_id=?", userID, postID).Scan(&count)
@@ -678,7 +678,7 @@ func (dm *DatabaseManager) SmartApplyThreadLike(userID, threadID int) error {
 		// User already liked, so remove the like (toggle off)
 		return dm.DeleteThreadLikes(userID, threadID)
 	}
-	
+
 	// Check if user disliked this thread, if so remove the dislike first
 	if dm.HasThreadDisliked(userID, threadID) {
 		err := dm.DeleteThreadDislikes(userID, threadID)
@@ -686,7 +686,7 @@ func (dm *DatabaseManager) SmartApplyThreadLike(userID, threadID int) error {
 			return err
 		}
 	}
-	
+
 	// Add the like
 	return dm.ApplyThreadLike(userID, threadID)
 }
@@ -697,7 +697,7 @@ func (dm *DatabaseManager) SmartApplyThreadDislike(userID, threadID int) error {
 		// User already disliked, so remove the dislike (toggle off)
 		return dm.DeleteThreadDislikes(userID, threadID)
 	}
-	
+
 	// Check if user liked this thread, if so remove the like first
 	if dm.HasThreadLiked(userID, threadID) {
 		err := dm.DeleteThreadLikes(userID, threadID)
@@ -705,7 +705,7 @@ func (dm *DatabaseManager) SmartApplyThreadDislike(userID, threadID int) error {
 			return err
 		}
 	}
-	
+
 	// Add the dislike
 	return dm.ApplyThreadDislike(userID, threadID)
 }
@@ -741,7 +741,7 @@ func (dm *DatabaseManager) SmartApplyPostLike(userID, postID int) error {
 		// User already liked, so remove the like (toggle off)
 		return dm.RemovePostLike(userID, postID)
 	}
-	
+
 	// Check if user disliked this post, if so remove the dislike first
 	hasDisliked, err := dm.HasUserDislikedPost(userID, postID)
 	if err != nil {
@@ -753,7 +753,7 @@ func (dm *DatabaseManager) SmartApplyPostLike(userID, postID int) error {
 			return err
 		}
 	}
-	
+
 	// Add the like
 	return dm.AddPostLike(userID, postID)
 }
@@ -768,7 +768,7 @@ func (dm *DatabaseManager) SmartApplyPostDislike(userID, postID int) error {
 		// User already disliked, so remove the dislike (toggle off)
 		return dm.RemovePostDislike(userID, postID)
 	}
-	
+
 	// Check if user liked this post, if so remove the like first
 	hasLiked, err := dm.HasUserLikedPost(userID, postID)
 	if err != nil {
@@ -780,7 +780,7 @@ func (dm *DatabaseManager) SmartApplyPostDislike(userID, postID int) error {
 			return err
 		}
 	}
-	
+
 	// Add the dislike
 	return dm.AddPostDislike(userID, postID)
 }
@@ -921,7 +921,7 @@ func (dm *DatabaseManager) GetThreadPostCount(threadID int) (int, error) {
 
 // User management methods needed by user.go
 func (dm *DatabaseManager) CreateThreadByUser(topic, body string, userID int, category1, category2 string) (int64, error) {
-	result, err := dm.db.Exec("INSERT INTO threads(uuid, topic, body, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?, ?)", 
+	result, err := dm.db.Exec("INSERT INTO threads(uuid, topic, body, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?, ?)",
 		createUUID(), topic, body, userID, time.Now(), category1, category2)
 	if err != nil {
 		return 0, err
@@ -930,7 +930,7 @@ func (dm *DatabaseManager) CreateThreadByUser(topic, body string, userID int, ca
 }
 
 func (dm *DatabaseManager) CreatePostByUser(body string, userID, threadID int) (int64, error) {
-	result, err := dm.db.Exec("INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)", 
+	result, err := dm.db.Exec("INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)",
 		createUUID(), body, userID, threadID, time.Now())
 	if err != nil {
 		return 0, err
@@ -1144,7 +1144,7 @@ func (dm *DatabaseManager) GetUserCreatedPosts(userID int) ([]Post, error) {
 		if err != nil {
 			continue
 		}
-		
+
 		// Get user info for this post
 		user, err := dm.GetPostUser(post.UserId)
 		if err == nil {
@@ -1172,19 +1172,17 @@ func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
 		if err != nil {
 			continue
 		}
-		
+
 		// Get user info for this thread
-		user, err := dm.GetUserByID(thread.UserId)
-		if err == nil {
-			thread.User = user.Name
-		}
-		
+		user, _ := dm.GetUserByID(thread.UserId)
+
+		thread.User = user.Name
 		// Format the creation date for display
 		thread.CreatedAtDate = thread.CreatedAt.Format("Jan 2, 2006 at 15:04")
-		
+
 		// Get number of replies (posts) for this thread
 		thread.NumReplies, _ = dm.GetThreadPostsCount(thread.Id)
-		
+
 		// Get posts for this thread
 		posts, err := dm.GetThreadPosts(thread.Id)
 		// TODO: User.Name
@@ -1193,7 +1191,7 @@ func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
 			thread.LengthOfPosts = len(posts)
 			thread.Email = user.Email
 		}
-		
+
 		threads = append(threads, thread)
 	}
 	return threads, nil
@@ -1203,7 +1201,7 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 	var threads []Thread
 	var query string
 	var args []interface{}
-	
+
 	if category1 != "" && category2 != "" {
 		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1=? OR category2=? ORDER BY created_at DESC"
 		args = []interface{}{category1, category2}
@@ -1217,7 +1215,7 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 		// Return all threads if no categories specified
 		return dm.GetAllThreads()
 	}
-	
+
 	rows, err := dm.db.Query(query, args...)
 	if err != nil {
 		return threads, err
@@ -1230,16 +1228,18 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 		if err != nil {
 			continue
 		}
-		
+
 		// Get user info for this thread
 		user, err := dm.GetUserByID(thread.UserId)
 		if err == nil {
 			thread.User = user.Name
 			thread.NumReplies, _ = dm.GetThreadPostsCount(thread.Id)
 			thread.CreatedAtDate = thread.CreatedAt.Format("Jan 2, 2006 at 15:04")
-
+			thread.LikesCount, _ = dm.GetThreadLikesCount(thread.Id)
+			thread.DislikesCount, _ = dm.GetThreadDislikesCount(thread.Id)
+			thread.Len = len(thread.Topic)
 		}
-		
+
 		threads = append(threads, thread)
 	}
 	return threads, nil

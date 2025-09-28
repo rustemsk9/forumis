@@ -14,6 +14,31 @@ func InitThreadDM(dm *DatabaseManager) {
 	threadDM = dm
 }
 
+func SortThreadsByLikesDesc(threads []Thread) ([]Thread, error) {
+	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
+	n := len(threads)
+	for i := 0; i < n; i++ {
+		for j := 0; j < n-i-1; j++ {
+			if threads[j].LikesCount < threads[j+1].LikesCount {
+				threads[j], threads[j+1] = threads[j+1], threads[j]
+			}
+		}
+	}
+	return threads, nil
+}
+
+func SortThreadsByLatest(threads []Thread) ([]Thread, error) {
+	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
+	n := len(threads)
+	for i := 0; i < n; i++ {
+		for j := 0; j < n-i-1; j++ {
+			if threads[j].CreatedAt.Before(threads[j+1].CreatedAt) {
+				threads[j], threads[j+1] = threads[j+1], threads[j]
+			}
+		}
+	}
+	return threads, nil
+}
 func GetCookieValue(request *http.Request) int {
 	// Debug: Print all cookies
 	fmt.Printf("DEBUG: All cookies for request: ")

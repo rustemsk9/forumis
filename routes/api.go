@@ -270,10 +270,7 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		// http.Redirect(writer, request, "/login", http.StatusSeeOther)
-		// writer.Header().Set("Content-Type", "application/javascript")
-		// writer.Write([]byte(`console.log("Unauthorised");`))
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		http.Redirect(writer, request, "/login", http.StatusSeeOther)
 		return
 	}
 
@@ -292,7 +289,7 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	voteType := request.FormValue("vote_type")
-	
+
 	// Apply the appropriate vote
 	switch voteType {
 	case "like":
@@ -312,9 +309,11 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	// Redirect back to where the user came from or to the thread page
 	redirectTo := request.Header.Get("Referer")
 	if redirectTo == "" {
-		redirectTo = "/"
+		redirectTo = "/#thread-" + strconv.Itoa(threadId-3) + "#thread-" + strconv.Itoa(threadId+3)
+	} else if !strings.Contains(redirectTo, "#thread-") {
+		// If anchor is missing, add it
+		redirectTo += "#thread-" + strconv.Itoa(threadId)
 	}
-	redirectTo += "#thread-" + strconv.Itoa(threadId)
 	http.Redirect(writer, request, redirectTo, http.StatusSeeOther)
 }
 
@@ -373,7 +372,7 @@ func LikePost(writer http.ResponseWriter, request *http.Request) {
 	dislikes, _ := dbManager.GetPostDislikesCount(postId)
 	userLiked, _ := dbManager.HasUserLikedPost(user.Id, postId)
 	userDisliked, _ := dbManager.HasUserDislikedPost(user.Id, postId)
-	
+
 	status := ThreadVoteStatus{
 		Likes:        likes,
 		Dislikes:     dislikes,
@@ -440,7 +439,7 @@ func DislikePost(writer http.ResponseWriter, request *http.Request) {
 	dislikes, _ := dbManager.GetPostDislikesCount(postId)
 	userLiked, _ := dbManager.HasUserLikedPost(user.Id, postId)
 	userDisliked, _ := dbManager.HasUserDislikedPost(user.Id, postId)
-	
+
 	status := ThreadVoteStatus{
 		Likes:        likes,
 		Dislikes:     dislikes,
@@ -489,7 +488,7 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	// Get counts and user vote status
 	likes, _ := dbManager.GetPostLikesCount(postId)
 	dislikes, _ := dbManager.GetPostDislikesCount(postId)
-	
+
 	var userLiked, userDisliked bool
 	if user != nil {
 		userLiked, _ = dbManager.HasUserLikedPost(user.Id, postId)
