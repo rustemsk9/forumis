@@ -55,6 +55,9 @@ func main() {
 		return
 	}
 	defer dbManager.Close()
+	
+	// Initialize all global DatabaseManager instances
+	data.InitAllDatabaseManagers(dbManager)
 
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(config.Static))
@@ -103,19 +106,21 @@ func main() {
 
 	// Add API routes with a custom handler for pattern matching
 	// API routes with middleware
-	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
+	mux.HandleFunc("/api/", authChain(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 
 		// Handle thread API endpoints
 		if strings.HasPrefix(path, "/api/thread/") {
 			if strings.HasSuffix(path, "/counts") {
 				routes.GetThreadCounts(w, r)
-			} else if strings.HasSuffix(path, "/like") {
-				routes.LikeThread(w, r)
-			} else if strings.HasSuffix(path, "/dislike") {
-				routes.DislikeThread(w, r)
+			// } else if strings.HasSuffix(path, "/like") {
+			// 	routes.LikeThread(w, r)
+			// } else if strings.HasSuffix(path, "/dislike") {
+			// 	routes.DislikeThread(w, r)
 			} else if strings.HasSuffix(path, "/status") {
 				routes.GetThreadVoteStatus(w, r)
+			} else if strings.HasSuffix(path, "/vote") {
+				routes.VoteThread(w, r)
 			} else {
 				http.Error(w, "Not Found", http.StatusNotFound)
 			}

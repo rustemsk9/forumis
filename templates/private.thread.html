@@ -1,32 +1,9 @@
 {{ define "content" }}
-
 <script>
   var point = ["num"];
   var num = 0;
 </script>
-<style>
-  iframe {
-    margin-top: -10px;
-  }
-  .fa {
-    font-size: 25px;
-    cursor: pointer;
-    user-select: none;
-  }
-  .forimage {
-    margin-left: 50px;
-    width: 950px;
-    height: 70px;
-  }
-  img {
-    max-width: 100%;
-    max-height: 100%;
-  }
-  .fa:hover {
-    color: darkblue;
-  }
-</style>
-<section style="margin-top: 20px">
+<section style="margin-top: 150px">
   <h5>Private</h5>
   <div id="starter"></div>
   <div class="panel panel-default">
@@ -39,24 +16,24 @@
         <br>
         </div>
         <div class="pull-right small">
-          Started by {{ .User.Name }} - {{ .CreatedAtDate }} {{ $v := .Id }}
+          Started by {{ .User }} - {{ .CreatedAtDate }} {{ $v := .Id }}
       </div>
     </div>
   </div>
 
   <br />
-  {{ range .Posts }}
+  {{ range .Cards }}
   <div class="panel-heading" style="padding-top: 10px">
     <script>
       num++;
       var strNum = "";
       strNum = num.toString();
-      var identify = "{{ .User.Name }}";
+      var identify = "{{ .User }}";
       point.push(identify);
     </script>
 
     <a class="text-break d-flex align-items-center"
-      ><i class="fa fa-comment me-2" style="font-size: 16px;">{{ .Body }}</i></a
+      ><i class="fa fa-comment me-2" style="font-size: 16px; cursor: pointer;">{{ .Body }}</i></a
     >
     <div
       class="d-flex justify-content-between align-items-center me-2 border rounded"
@@ -64,7 +41,7 @@
       <div class="text-muted small"  style="font-size: 13px;">
         Posted by
         <a id="num" class="element" href="/account?user_id={{.UserId}}"
-          >{{ .User.Name }}</a
+          >{{ .User }}</a
         >
         - {{ .CreatedAtDate }}
       </div>

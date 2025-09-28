@@ -8,6 +8,14 @@ import (
 	"time"
 )
 
+// Global DatabaseManager instance for session operations
+var sessionDM *DatabaseManager
+
+// InitSessionDM initializes the global DatabaseManager for session operations
+func InitSessionDM(dm *DatabaseManager) {
+	sessionDM = dm
+}
+
 type Session struct {
 	Id           int
 	Uuid         string
@@ -24,7 +32,7 @@ func (session *Session) Valid() (valid bool, err error) {
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
 
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE uuid=?", session.Uuid).
+	err = sessionDM.db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE uuid=?", session.Uuid).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
 	if err != nil {
 		valid = false
@@ -35,7 +43,7 @@ func (session *Session) Valid() (valid bool, err error) {
 	if session.Id != 0 {
 		valid = true
 		// Update active_last with current time
-		_, err = Db.Exec("UPDATE sessions SET active_last = ? WHERE uuid = ?", currentTime, session.Uuid)
+		_, err = sessionDM.db.Exec("UPDATE sessions SET active_last = ? WHERE uuid = ?", currentTime, session.Uuid)
 		if err != nil {
 			// Don't fail validation if update fails, just log it
 			fmt.Printf("Warning: Could not update active_last for session %s: %v\n", session.Uuid, err)
@@ -46,28 +54,17 @@ func (session *Session) Valid() (valid bool, err error) {
 
 // delete session from database
 func (session *Session) DeleteByUUID() (err error) {
-	stmt, err := Db.Prepare("DELETE FROM sessions WHERE uuid=?")
-	if err != nil {
-		return
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(session.Uuid)
-	return
+	return sessionDM.DeleteSessionByUUID(session.Uuid)
 }
 
 // get the user from the session
 func (session *Session) User() (user User, err error) {
-	user = User{}
-	err = Db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id=?", session.UserId).
-		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt)
-	return
+	return sessionDM.GetSessionUser(session.UserId)
 }
 
 // delete all sessions from database
 func SessionDeleteAll() (err error) {
-	_, err = Db.Exec("DELETE FROM sessions")
-	return
+	return sessionDM.DeleteAllSessions()
 }
 
 // checks if the user is logged in and has a session, if not err is not nil
@@ -89,72 +86,16 @@ func SessionCheck(writer http.ResponseWriter, request *http.Request) (sess Sessi
 
 // Update session with cookie string
 func (session *Session) UpdateCookieString(cookieValue string) error {
-	stmt, err := Db.Prepare("UPDATE sessions SET cookie_string=? WHERE uuid=?")
-	if err != nil {
-		return err
-	}
-	defer stmt.Close()
-
-	_, err = stmt.Exec(cookieValue, session.Uuid)
-	return err
+	return sessionDM.UpdateSessionCookieString(session.Uuid, cookieValue)
 }
 
 // Get session by cookie string
 func GetSessionByCookie(cookieValue string) (sess Session, err error) {
-	err = Db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE cookie_string=?", cookieValue).
-		Scan(&sess.Id, &sess.Uuid, &sess.Email, &sess.UserId, &sess.CreatedAt, &sess.CookieString, &sess.ActiveLast)
-	return
+	return sessionDM.GetSessionByCookie(cookieValue)
 }
 
 // CheckOnlineUsers returns a list of users who have been active recently
 // considerOnline: time difference in minutes to consider a user online (e.g., 5 for 5 minutes)
 func CheckOnlineUsers(considerOnline int) ([]User, error) {
-	var users []User
-	now := time.Now()
-	currentTime := now.Hour()*100 + now.Minute()
-
-	// Query to get active sessions with user information
-	query := `
-		SELECT DISTINCT u.id, u.uuid, u.name, u.email, u.created_at, s.active_last
-		FROM users u 
-		INNER JOIN sessions s ON u.id = s.user_id 
-		WHERE s.active_last > 0`
-
-	rows, err := Db.Query(query)
-	if err != nil {
-		return users, err
-	}
-	defer rows.Close()
-
-	for rows.Next() {
-		var user User
-		var activeLast int
-
-		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &activeLast)
-		if err != nil {
-			continue
-		}
-
-		// Calculate time difference in minutes
-		// Handle hour rollover (e.g., from 23:59 to 00:05)
-		var timeDiff int
-		if currentTime >= activeLast {
-			// Same day
-			hourDiff := (currentTime / 100) - (activeLast / 100)
-			minuteDiff := (currentTime % 100) - (activeLast % 100)
-			timeDiff = hourDiff*60 + minuteDiff
-		} else {
-			// Hour rollover (next day)
-			hourDiff := (24 + currentTime/100) - (activeLast / 100)
-			minuteDiff := (currentTime % 100) - (activeLast % 100)
-			timeDiff = hourDiff*60 + minuteDiff
-		}
-
-		// Only include users active within the specified time frame
-		if timeDiff <= considerOnline {
-			users = append(users, user)
-		}
-	}
-
-	return users, nil
+	return sessionDM.CheckOnlineUsers(considerOnline)
 }

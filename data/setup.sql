@@ -14,7 +14,9 @@ CREATE TABLE users (
   name       varchar(64),
   email      varchar(64) not null unique,
   password   varchar(128) not null,
-  created_at timestamp not null
+  created_at timestamp not null,
+  prefered_category1 varchar(255) default '',
+  prefered_category2 varchar(255) default ''
 );
 
 CREATE TABLE sessions (

@@ -31,3 +31,8 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	user.CreatedAt = createdAt
 	
 	return
+
+  <select name="sort_by">
+    <option value="">Sort by Date (Newest)</option>
+    <option value="likes" {{ if eq .SortBy "likes" }}selected{{ end }}>Sort by Most Likes</option>
+  </select>

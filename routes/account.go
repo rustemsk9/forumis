@@ -14,33 +14,62 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 	_, err := data.SessionCheck(writer, request)
 	if err != nil {
 		http.Redirect(writer, request, "/login", 302)
+		return
 	}
+	
 	URLID := request.URL.Query().Get("user_id")
 	URLIDConv, _ := strconv.Atoi(URLID)
 	fmt.Println(URLIDConv)
-	// and user template define content here
+	
+	// Get user threads
 	thread, err := data.AccountThreads(URLIDConv)
 	if err != nil {
-		fmt.Println("Error on routes ReadAccount")
+		fmt.Println("Error on routes ReadAccount:", err)
 		http.Redirect(writer, request, "/", 302)
 		return
 	}
 
+		likedposts, err := data.GetUserLikedPosts(URLIDConv)
+	if err != nil {
+		fmt.Println("Error getting user liked posts:", err)
+	}
+
 	userINFO := data.GetUserById(URLIDConv)
-	if thread == nil {
+	if len(thread) == 0 && len(likedposts) == 0 {
 		utils.GenerateHTML(writer, &userINFO, "layout", "private.navbar", "justaccount")
-		// http.Redirect(writer, request, "/", 302)
 		return
 	}
 
-	posts, _ := data.GetUserPosts(URLIDConv)
-	likedposts, _ := data.GetUserLikedPosts(URLIDConv)
+	// Get user posts and liked posts
+	posts, err := data.GetUserPosts(URLIDConv)
+	if err != nil {
+		fmt.Println("Error getting user posts:", err)
+	}
+	
 
-	fmt.Println(likedposts)
-	getFinal, _ := data.GetLikesPostsFromDB(likedposts)
-	thread[0].Cards = posts
-	// fmt.Println(getFinal)
-	thread[0].LikedPosts = getFinal
+
+	fmt.Println("Liked posts IDs:", likedposts)
+	getFinal, err := data.GetLikesPostsFromDB(likedposts)
+	if err != nil {
+		fmt.Println("Error getting liked posts details:", err)
+	}
+	
+	// Set posts and liked posts on the first thread (for template compatibility)
+	if len(thread) > 0 {
+		thread[0].Cards = posts
+		thread[0].LikedPosts = getFinal
+	} else {
+		// Create a dummy thread entry if no threads exist, but user has posts or liked posts
+		if len(posts) > 0 || len(getFinal) > 0 {
+			dummyThread := data.Thread{
+				Cards:      posts,
+				LikedPosts: getFinal,
+				User:       userINFO.Name, // Use the user info we already have
+				Email:     userINFO.Email,
+			}
+			thread = append(thread, dummyThread)
+		}
+	}
 	filesFrom := []string{"layout", "private.navbar", "account", "accountbypost", "cookie-consent"}
 	var files []string
 	for _, file := range filesFrom {

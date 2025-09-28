@@ -2,9 +2,9 @@ package data
 
 import (
 	"crypto/rand"
-	"database/sql"
 	"fmt"
 	"log"
+	"time"
 
 	"golang.org/x/crypto/bcrypt"
 
@@ -21,22 +21,81 @@ type LoginSkin struct {
 	Error  string
 }
 
-type sqlInfo struct {
-	DriverName string
-	Username   string
-	Password   string
-	Database   string
+
+type Thread struct {
+	Id             int
+	Uuid           string
+	Topic          string
+	Body           string
+	UserId         int
+	User           string
+	Email 		string
+	CreatedAt      time.Time
+	CreatedAtDate  string
+	NumReplies     int
+	//
+	Cards          []Post
+	LikedPosts     []Post
+	LengthOfPosts  int
+	ThreadCategory int
+	// LengthOfLikes  int
+	LikesCount     int
+	DislikesCount  int
+	UserLiked      bool
+	Category1      string
+	Category2      string
 }
 
-var info sqlInfo
-var Db *sql.DB // Temporary global for backward compatibility
+type LikeProperties struct {
+	Li []Likes
+	Di []Dislikes
+}
 
-func init() {
-	var err error
-	Db, err = sql.Open("sqlite3", "mydb.db")
-	if err != nil {
-		log.Fatal(err)
-	}
+type ThreadLikeProperties struct {
+	Li []ThreadLikes
+	Di []ThreadDislikes
+}
+
+type Likes struct {
+	Type          string
+	UserId        int
+	PostId        int
+	LengthOfLikes int
+	UserLiked     bool
+}
+
+type Dislikes struct {
+	Type             string
+	UserId           int
+	PostId           int
+	LengthOfDislikes int
+	UserDisliked     bool
+}
+
+type ThreadLikes struct {
+	Type          string
+	UserId        int
+	ThreadId      int
+	LengthOfLikes int
+	UserDisliked  bool
+}
+
+type ThreadDislikes struct {
+	Type             string
+	UserId           int
+	ThreadId         int
+	LengthOfDislikes int
+	UserDisliked     bool
+}
+
+type Post struct {
+	Id        int
+	Uuid      string
+	Body      string
+	UserId    int
+	ThreadId  int
+	CreatedAt time.Time
+	User      string // User information for template access
 }
 
 // create a random UUID with from RFC 4122
@@ -70,4 +129,12 @@ func Encrypt(plaintext string) string {
 func CheckPassword(hashedPassword, password string) bool {
 	err := bcrypt.CompareHashAndPassword([]byte(hashedPassword), []byte(password))
 	return err == nil
+}
+
+// InitAllDatabaseManagers initializes all global DatabaseManager instances
+func InitAllDatabaseManagers(dm *DatabaseManager) {
+	InitSessionDM(dm)
+	InitStatsDM(dm)
+	InitUserDM(dm)
+	InitThreadDM(dm)
 }

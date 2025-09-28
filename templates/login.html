@@ -102,11 +102,17 @@
         {{ if .Submit }}{{ .Submit }}{{ else }}Login{{ end }}
       </button>
       <button class="btn2">
-        <a href="/signup"
+        <a href="/signup" onclick="event.stopPropagation();"
           >{{ if .Signup }}{{ .Signup }} {{ else }}Signup{{ end }}
         </a>
       </button>
     </div>
+    <br />
+    <p>
+      Need an account?
+      <a href="/signup">Register</a>
+      .
+    </p>
   </div>
   <br />
   {{ .Error }}

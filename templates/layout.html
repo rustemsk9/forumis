@@ -4,52 +4,25 @@
   <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1" />
-    <link href="/static/css/font-awesome.min.css" rel="stylesheet" />
+    <!-- <link href="/static/css/font-awesome.min.css" rel="stylesheet" /> -->
     <link href="/static/css/layout.css" rel="stylesheet" type="text/css" />
   </head>
   <body class="container-lg bg-light">
+    <title>Forum Talk</title>
+    <div class="container-lg position-relative">{{ template "navbar" . }}</div>
     <div class="d-flex flex-grow-1 container-lg justify-content-center">
-      <title>Forum Talk</title>
-      <video
-        autoplay
-        muted
-        loop
-        style="
-          width: 100%;
-          height: 250px;
-          max-width: 900px;
-          object-fit: cover;
-          display: block;
-          object-position: center;
-          aspect-ratio: 16 / 9;
-          border-radius: 30px;
-          z-index: -1;
-          transform: none;
-          position: absolute;
-          overflow: hidden;
-        "
-      >
+      <video autoplay muted loop class="video">
+        <source src="/static/images/tree.mp4" type="video/mp4" />
         <source
           src="/static/images/tree.webm"
           type="video/webm; codecs=vp9, opus"
         />
-        <source src="/static/images/tree.mp4" type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      <!-- </div> -->
-      <!-- </div><div class="start-50 translate-middle-x"> -->
-      <!-- <img class="img-fluid" width="150" height="150" src="/static/book2.png" alt="Forum Book"> -->
-      <!-- </div> -->
-    </div>
-    <div
-      class="container-lg pd-50 position-relative"
-      style="z-index: 1; margin-top: 180px; margin-bottom: 20px"
-    >
-      {{ template "navbar" . }}
     </div>
 
     <!-- Main content area -->
-    <main class="container-lg flex-grow-1 py-4" style="margin-top: 30px">
+    <main class="container-lg flex-grow-1 py-4" style="margin-top: 60px">
       {{ template "content" . }}
     </main>
 

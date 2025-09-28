@@ -7,3 +7,9 @@ document.querySelector("form").addEventListener("submit", function (e) {
     alert("Please fill at least one of the selections.");
   }
 });
+
+document.getElementById("selection1").addEventListener("change", function () {
+  const selection2 = document.getElementById("selection2");
+  selection2.style.display = "";
+  selection2.classList.add("active");
+});

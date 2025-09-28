@@ -194,6 +194,10 @@ a {
   gap: 0.25rem;
 }
 
+.gap-2 {
+  gap: 0.5rem;
+}
+
 /* === Typography === */
 .small {
   font-size: 0.875em;
@@ -507,6 +511,25 @@ textarea.form-control {
   display: inline-block;
 }
 
+#myBtnContainer {
+  float: right;
+  padding-right: 150px;
+}
+
+video {
+  width: 100%;
+  height: 250px;
+  max-width: 900px;
+  object-fit: cover;
+  display: block;
+  object-position: center;
+  aspect-ratio: 16 / 9;
+  border-radius: 30px;
+  z-index: -1;
+  transform: none;
+  overflow: hidden;
+  position: absolute;
+}
 /* === Responsive Design === */
 @media (max-width: 576px) {
   .col-sm-6 {

@@ -1,0 +1,111 @@
+package main
+
+import (
+	"database/sql"
+	"fmt"
+	"log"
+	"time"
+
+	"github.com/gofrs/uuid"
+	_ "github.com/mattn/go-sqlite3"
+	"golang.org/x/crypto/bcrypt"
+)
+
+type User struct {
+	Id        int
+	Uuid      string
+	Name      string
+	Email     string
+	Password  string
+	CreatedAt time.Time
+	PreferedCategory1 string
+	PreferedCategory2 string
+}
+
+func init() {
+	var err error
+	Db, err = sql.Open("sqlite3", "../mydb.db")
+	if err != nil {
+		log.Fatal(err)
+	}
+}
+
+func Encrypt(plaintext string) string {
+	hash, err := bcrypt.GenerateFromPassword([]byte(plaintext), bcrypt.DefaultCost)
+	if err != nil {
+		log.Fatal(err)
+	}
+	return string(hash)
+}
+
+var testDm *DatabaseManager
+func InitTestDM(dm *DatabaseManager) {
+	// Initialize test data
+	testDm = dm
+}
+func sortThreadsByLikes() {
+	dm, err := testDm.NewDatabaseManager("mydb.db")
+	if err != nil {
+		fmt.Printf("Database error: %v\n", err)
+		return
+	}
+	defer dm.Close()
+
+	threads, err := dm.GetAllThreadsByLikes()
+	if err != nil {
+		fmt.Printf("GetAllThreadsByLikes error: %v\n", err)
+		return
+	}
+
+	fmt.Printf("Found %d threads sorted by likes:\n", len(threads))
+	for i, thread := range threads {
+		fmt.Printf("%d. %s (Likes: %d)\n", i+1, thread.Topic, thread.LikesCount)
+	}
+}
+
+func (user *User) Create() (err error) {
+	user.Uuid = uuid.Must(uuid.NewV4()).String()
+	user.CreatedAt = time.Now()
+	result, err := testDm.Db.Exec("INSERT INTO users (uuid, name, email, password, created_at, prefered_category1, prefered_category2) VALUES (?, ?, ?, ?, ?, ?, ?)",
+		user.Uuid, user.Name, user.Email, user.Password, user.CreatedAt, user.PreferedCategory1, user.PreferedCategory2)
+	if err != nil {
+		return err
+	}
+	id, err := result.LastInsertId()
+	if err != nil {
+		return err
+	}
+	user.Id = int(id)
+	return nil
+}
+
+func UserByEmail(email string) (user User, err error) {
+	user = User{}
+	err = Db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE email=?", email).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.PreferedCategory1, &user.PreferedCategory2)
+	return
+}
+
+func main() {
+	user := User{
+		Name:     "TestUser2",
+		Email:    "test2@example.com",
+		Password: Encrypt("password123"),
+		PreferedCategory1: "AI-theme",
+		PreferedCategory2: "Creativity",
+	}
+	err := user.Create()
+	if err != nil {
+		log.Fatal("Failed to create user:", err)
+	}
+	fmt.Printf("User created successfully! ID: %d, UUID: %s\n", user.Id, user.Uuid)
+
+	retrievedUser, err := UserByEmail("test2@example.com")
+	if err != nil {
+		log.Fatal("Failed to retrieve user:", err)
+	}
+	fmt.Printf("User retrieved successfully! ID: %d, Name: %s, Email: %s, PrefCat1: %s, PrefCat2: %s\n",
+		retrievedUser.Id, retrievedUser.Name, retrievedUser.Email, retrievedUser.PreferedCategory1, retrievedUser.PreferedCategory2)
+
+	sortThreadsByLikes()
+}

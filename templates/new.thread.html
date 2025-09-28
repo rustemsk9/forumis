@@ -1,19 +1,19 @@
 {{ define "content" }}
-
+<section style="margin-top: 170px; margin-bottom: 50px;">
 <form role="form" action="/thread/create" method="post">
-  <select name="selection1" id="selection1">
+  <select name="selection1" id="selection1" required>
     <option value="">None</option>
     <option value="Sports">Sports</option>
     <option value="Movies">Movies</option>
     <option value="Games">Games</option>
     <option value="Other">Other</option>
   </select>
-  <select name="selection2" id="selection2">
+  <select name="selection2" id="selection2" style="display:none;">
     <option value="">None</option>
-    <option value="Sports">Sports</option>
-    <option value="Movies">Movies</option>
-    <option value="Games">Games</option>
-    <option value="Other">Other</option>
+    <option value="AI-theme">AI-theme</option>
+    <option value="Tomorrow-school">Tomorrow-school</option>
+    <option value="Creativity">Creativity</option>
+    <option value="Miscellaneous">Miscellaneous</option>
   </select>
   <a> pick your category</a>
   <div class="lead">Start a new thread with the following topic</div>
@@ -44,5 +44,5 @@
 </form>
 
     <script src="/static/js/selection-notify.js"></script>
-
+</section>
 {{ end }}
