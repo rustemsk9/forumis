@@ -16,16 +16,6 @@ func InitSessionDM(dm *DatabaseManager) {
 	sessionDM = dm
 }
 
-type Session struct {
-	Id           int
-	Uuid         string
-	Email        string
-	UserId       int
-	CreatedAt    time.Time
-	CookieString string
-	ActiveLast   int
-}
-
 // check if session is valid in the database
 func (session *Session) Valid() (valid bool, err error) {
 	// Calculate current time as hour*100 + minute (e.g., 14:30 = 1430)

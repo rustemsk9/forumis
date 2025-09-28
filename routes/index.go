@@ -40,10 +40,6 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			category1 = request.PostFormValue("selection1")
 			category2 = request.PostFormValue("selection2")
 			sortBy = request.PostFormValue("sort_by")
-			
-			if category1 != "" || category2 != "" {
-				catbool = true
-			}
 
 			// Save user preferences if user is authenticated
 			if IsAuthenticated(request) {
@@ -67,13 +63,6 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		}
 	} else {
 		// GET request - check for sort parameter in URL
-		sortBy = request.URL.Query().Get("sort")
-		
-		if sortBy == "likes" {
-			threads, err = dbManager.GetAllThreadsByLikes()
-		} else {
-			threads, err = dbManager.GetAllThreads()
-		}
 		
 		// Load user preferred categories for authenticated users
 		if IsAuthenticated(request) {
@@ -90,6 +79,23 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 				}
 			}
 		}
+
+		err = request.ParseForm()
+		if err == nil {
+			// category1 = request.PostFormValue("selection1")
+			// category2 = request.PostFormValue("selection2")
+			sortBy = request.PostFormValue("sort_by")
+		}
+		if category1 != "" || category2 != "" {
+			threads, _ = data.FilterThreadsByCategories(category1, category2)
+			catbool = true
+			
+		} else if sortBy == "likes" {
+			threads, _ = dbManager.GetAllThreadsByLikes()
+		} else {
+			threads, _ = dbManager.GetAllThreads()
+		}
+		
 	}
 
 	if err == nil {
@@ -145,6 +151,6 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			utils.GenerateHTML(writer, pageData, "layout", "public.navbar", "index")
 		}
 	} else {
-		utils.ErrorMessage(writer, request, "Cannot get threads")
+		utils.ErrorMessage(writer, request, "Empty forum. No threads found.")
 	}
 }

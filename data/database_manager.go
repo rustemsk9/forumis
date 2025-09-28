@@ -1205,7 +1205,7 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 	var args []interface{}
 	
 	if category1 != "" && category2 != "" {
-		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1=? AND category2=? ORDER BY created_at DESC"
+		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1=? OR category2=? ORDER BY created_at DESC"
 		args = []interface{}{category1, category2}
 	} else if category1 != "" {
 		query = "SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE category1=? ORDER BY created_at DESC"

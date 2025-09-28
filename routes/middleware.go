@@ -81,7 +81,7 @@ func WithAuthentication() Middleware {
 						// Get user from session
 			user, err := dbManager.GetUserByID(session.UserId)
 			if err != nil {
-				next(w, r) 				// User not found, continue without authentication
+				next(w, r) 	// User not found, continue without authentication
 				return
 			}			
 						// Add session and user to context

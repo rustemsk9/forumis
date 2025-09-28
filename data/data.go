@@ -21,6 +21,15 @@ type LoginSkin struct {
 	Error  string
 }
 
+type Session struct {
+	Id           int
+	Uuid         string
+	Email        string
+	UserId       int
+	CreatedAt    time.Time
+	CookieString string
+	ActiveLast   int
+}
 
 type Thread struct {
 	Id             int
@@ -29,7 +38,7 @@ type Thread struct {
 	Body           string
 	UserId         int
 	User           string
-	Email 		string
+	Email          string
 	CreatedAt      time.Time
 	CreatedAtDate  string
 	NumReplies     int
@@ -38,7 +47,6 @@ type Thread struct {
 	LikedPosts     []Post
 	LengthOfPosts  int
 	ThreadCategory int
-	// LengthOfLikes  int
 	LikesCount     int
 	DislikesCount  int
 	UserLiked      bool
