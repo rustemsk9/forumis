@@ -1059,6 +1059,7 @@ func (dm *DatabaseManager) GetUserLikedPosts(userID int) ([]Likes, error) {
 		var like Likes
 		err = rows.Scan(&like.Type, &like.UserId, &like.PostId)
 		if err != nil {
+			fmt.Println("Error scanning like:", err)
 			continue
 		}
 		likes = append(likes, like)
@@ -1170,6 +1171,7 @@ func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
 		var thread Thread
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
+			fmt.Println("Error scanning thread for Account:", err)
 			continue
 		}
 
@@ -1243,4 +1245,150 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 		threads = append(threads, thread)
 	}
 	return threads, nil
+}
+
+// GetThreadsByUserID returns all threads created by a specific user
+func (dm *DatabaseManager) GetThreadsByUserID(userID int) ([]Thread, error) {
+	rows, err := dm.db.Query(`
+		SELECT t.id, t.uuid, t.topic, t.body, t.user_id, u.name, u.email, 
+		       t.created_at, t.category1,
+		       COALESCE(p.reply_count, 0) as num_replies
+		FROM threads t 
+		JOIN users u ON t.user_id = u.id 
+		LEFT JOIN (
+			SELECT thread_id, COUNT(*) as reply_count 
+			FROM posts 
+			GROUP BY thread_id
+		) p ON t.id = p.thread_id
+		WHERE t.user_id = ?
+		ORDER BY t.created_at DESC`, userID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var threads []Thread
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body,
+			&thread.UserId, &thread.User, &thread.Email,
+			&thread.CreatedAt, &thread.Category1, &thread.NumReplies)
+		if err != nil {
+			return nil, err
+		}
+
+		// Format created date
+		thread.CreatedAtDate = thread.CreatedAt.Format("2006-01-02 15:04:05")
+
+		threads = append(threads, thread)
+	}
+
+	return threads, rows.Err()
+}
+
+// GetPostsByUserID returns all posts created by a specific user
+func (dm *DatabaseManager) GetPostsByUserID(userID int) ([]Post, error) {
+	rows, err := dm.db.Query(`
+		SELECT p.id, p.uuid, p.body, p.user_id, p.thread_id, p.created_at, u.name
+		FROM posts p 
+		JOIN users u ON p.user_id = u.id 
+		WHERE p.user_id = ?
+		ORDER BY p.created_at DESC`, userID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId,
+			&post.ThreadId, &post.CreatedAt, &post.User)
+		if err != nil {
+			return nil, err
+		}
+
+		// Format created date for template
+		post.FormattedDate = post.CreatedAt.Format("2006-01-02 15:04:05")
+
+		posts = append(posts, post)
+	}
+
+	return posts, rows.Err()
+}
+
+// GetLikedPostsByUserID returns all posts liked by a specific user
+func (dm *DatabaseManager) GetLikedPostsByUserID(userID int) ([]Post, error) {
+	rows, err := dm.db.Query(`
+		SELECT p.id, p.uuid, p.body, p.user_id, p.thread_id, p.created_at, u.name
+		FROM posts p 
+		JOIN users u ON p.user_id = u.id 
+		JOIN likedposts l ON p.id = l.post_id
+		WHERE l.user_id = ?
+		ORDER BY p.created_at DESC`, userID)
+
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var posts []Post
+	for rows.Next() {
+		var post Post
+		err := rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId,
+			&post.ThreadId, &post.CreatedAt, &post.User)
+		if err != nil {
+			return nil, err
+		}
+
+		// Format created date for template
+		post.FormattedDate = post.CreatedAt.Format("2006-01-02 15:04:05")
+
+		posts = append(posts, post)
+	}
+
+	return posts, rows.Err()
+}
+
+// GetLikedThreadsByUserID returns all threads liked by a specific user
+func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]Thread, error) {
+	rows, err := dm.db.Query(`
+		SELECT t.id, t.uuid, t.topic, t.body, t.user_id, u.name, u.email, 
+		       t.created_at, t.category1,
+		       COALESCE(p.reply_count, 0) as num_replies
+		FROM threads t 
+		JOIN users u ON t.user_id = u.id 
+		LEFT JOIN (
+			SELECT thread_id, COUNT(*) as reply_count 
+			FROM posts 
+			GROUP BY thread_id
+		) p ON t.id = p.thread_id
+		JOIN threadlikes tl ON t.id = tl.thread_id
+		WHERE tl.user_id = ?
+		ORDER BY t.created_at DESC`, userID)
+	
+	if err != nil {
+		return nil, err
+	}
+	defer rows.Close()
+
+	var threads []Thread
+	for rows.Next() {
+		var thread Thread
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, 
+			&thread.UserId, &thread.User, &thread.Email, 
+			&thread.CreatedAt, &thread.Category1, &thread.NumReplies)
+		if err != nil {
+			return nil, err
+		}
+		
+		// Format created date
+		thread.CreatedAtDate = thread.CreatedAt.Format("2006-01-02 15:04:05")
+		
+		threads = append(threads, thread)
+	}
+	
+	return threads, rows.Err()
 }

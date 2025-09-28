@@ -2,7 +2,6 @@ package routes
 
 import (
 	"fmt"
-	"html/template"
 	"net/http"
 	"strconv"
 
@@ -11,86 +10,106 @@ import (
 )
 
 func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
-	_, err := data.SessionCheck(writer, request)
-	if err != nil {
+	if request.Method == "POST" {
+		utils.MethodNotAllowed(writer, request, "POST method not allowed")
+		return
+	}
+
+	// Get database manager from context
+	dbManager := GetDatabaseManager(request)
+	if dbManager == nil {
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
+		return
+	}
+
+	// Check if user is authenticated
+	if !IsAuthenticated(request) {
 		http.Redirect(writer, request, "/login", 302)
 		return
 	}
-	
+
+	// Get user ID from URL parameters
 	URLID := request.URL.Query().Get("user_id")
-	URLIDConv, _ := strconv.Atoi(URLID)
-	fmt.Println(URLIDConv)
-	
-	// Get user threads
-	thread, err := data.AccountThreads(URLIDConv)
-	if err != nil {
-		fmt.Println("Error on routes ReadAccount:", err)
-		http.Redirect(writer, request, "/", 302)
+	if URLID == "" {
+		utils.BadRequest(writer, request, "User ID is required")
 		return
 	}
 
-		likedposts, err := data.GetUserLikedPosts(URLIDConv)
+	URLIDConv, err := strconv.Atoi(URLID)
 	if err != nil {
-		fmt.Println("Error getting user liked posts:", err)
-	}
-
-	userINFO := data.GetUserById(URLIDConv)
-	if len(thread) == 0 && len(likedposts) == 0 {
-		utils.GenerateHTML(writer, &userINFO, "layout", "private.navbar", "justaccount")
+		utils.BadRequest(writer, request, "Invalid user ID format")
 		return
 	}
 
-	// Get user posts and liked posts
-	posts, err := data.GetUserPosts(URLIDConv)
+	// Get user info first
+	userInfo, err := dbManager.GetUserByID(URLIDConv)
 	if err != nil {
-		fmt.Println("Error getting user posts:", err)
+		utils.NotFound(writer, request)
+		return
 	}
-	
 
-
-	fmt.Println("Liked posts IDs:", likedposts)
-	getFinal, err := data.GetLikesPostsFromDB(likedposts)
+	// Get user's threads
+	userThreads, err := dbManager.GetThreadsByUserID(URLIDConv)
 	if err != nil {
-		fmt.Println("Error getting liked posts details:", err)
+		fmt.Printf("Error getting user threads: %v\n", err)
+		userThreads = []data.Thread{} // Empty slice if error
 	}
-	
-	// Set posts and liked posts on the first thread (for template compatibility)
-	if len(thread) > 0 {
-		thread[0].Cards = posts
-		thread[0].LikedPosts = getFinal
+
+	// Get user's posts
+	userPosts, err := dbManager.GetPostsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user posts: %v\n", err)
+		userPosts = []data.Post{} // Empty slice if error
+	}
+
+	// Get user's liked posts
+	likedPosts, err := dbManager.GetLikedPostsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user liked posts: %v\n", err)
+		likedPosts = []data.Post{} // Empty slice if error
+	}
+
+	// Get user's liked threads
+	likedThreads, err := dbManager.GetLikedThreadsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user liked threads: %v\n", err)
+		likedThreads = []data.Thread{} // Empty slice if error
+	}
+
+	// Create account data structure that matches the template expectations
+	// The template expects an array where the first element has user info and contains Cards/LikedPosts
+	var templateData []data.Thread
+
+	// Always create at least one element for the template
+	var firstElement data.Thread
+
+	if len(userThreads) > 0 {
+		// Use the first thread as a base
+		firstElement = userThreads[0]
+
+		// Add the rest of the threads if any
+		if len(userThreads) > 1 {
+			templateData = append(templateData, userThreads[1:]...)
+		}
 	} else {
-		// Create a dummy thread entry if no threads exist, but user has posts or liked posts
-		if len(posts) > 0 || len(getFinal) > 0 {
-			dummyThread := data.Thread{
-				Cards:      posts,
-				LikedPosts: getFinal,
-				User:       userINFO.Name, // Use the user info we already have
-				Email:     userINFO.Email,
-			}
-			thread = append(thread, dummyThread)
+		// No threads, create a dummy thread with user info
+		firstElement = data.Thread{
+			User:      userInfo.Name,
+			Email:     userInfo.Email,
+			CreatedAt: userInfo.CreatedAt,
 		}
 	}
-	filesFrom := []string{"layout", "private.navbar", "account", "accountbypost", "cookie-consent"}
-	var files []string
-	for _, file := range filesFrom {
-		files = append(files, fmt.Sprintf("templates/%s.html", file))
-	}
 
-	fmt.Println("Templates files are: ", files)
-	templates, err := template.ParseFiles(files...)
-	if err != nil {
-		fmt.Println("Template parsing error:", err)
-		http.Error(writer, "Template parsing error", http.StatusInternalServerError)
-		return
-	}
+	// Set the Cards and LikedPosts on the first element
+	firstElement.Cards = userPosts
+	firstElement.LikedPosts = likedPosts
+	firstElement.UserLikedThreads = likedThreads
 
-	err = templates.ExecuteTemplate(writer, "layout", &thread)
-	if err != nil {
-		fmt.Println("Template execution error:", err)
-		http.Error(writer, "Template execution error", http.StatusInternalServerError)
-		return
-	}
-	fmt.Println("Template executed successfully!")
+	// Insert the first element at the beginning
+	templateData = append([]data.Thread{firstElement}, templateData...)
+
+	// Use the utility function to generate HTML
+	utils.GenerateHTML(writer, templateData, "layout", "private.navbar", "account", "accountbypost", "cookie-consent")
 }
 
 func AccountCheck(writer http.ResponseWriter, request *http.Request) {

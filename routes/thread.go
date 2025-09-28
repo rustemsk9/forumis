@@ -19,7 +19,7 @@ func NewThread(writer http.ResponseWriter, request *http.Request) {
 		http.Redirect(writer, request, "/login", http.StatusFound)
 		return
 	}
-	
+
 	utils.GenerateHTML(writer, nil, "layout", "private.navbar", "new.thread")
 }
 
@@ -29,42 +29,55 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		http.Redirect(writer, request, "/login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		http.Redirect(writer, request, "/login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		utils.Danger(err, "Cannot parse form")
-	} else {
-		topic := request.PostFormValue("topic")
-		body := request.PostFormValue("body")
-		selected := request.PostFormValue("selection1")
-		selected2 := request.PostFormValue("selection2")
-
-		if selected == selected2 {
-			selected2 = ""
-		}
-		// Use CreateThreadByUser which accepts string categories
-		idTo, err := dbManager.CreateThreadByUser(topic, body, currentUser.Id, selected, selected2)
-		if err != nil {
-			utils.Danger(err, "Cannot create thread")
-		}
-
-		http.Redirect(writer, request, "/thread/read?id="+strconv.Itoa(int(idTo)), http.StatusFound)
+		utils.BadRequest(writer, request, "Cannot parse form data")
+		return
 	}
+
+	topic := request.PostFormValue("topic")
+	body := request.PostFormValue("body")
+	selected := request.PostFormValue("selection1")
+	selected2 := request.PostFormValue("selection2")
+
+	// Validate required fields
+	if topic == "" {
+		utils.BadRequest(writer, request, "Thread topic is required")
+		return
+	}
+	if body == "" {
+		utils.BadRequest(writer, request, "Thread body is required")
+		return
+	}
+
+	if selected == selected2 {
+		selected2 = ""
+	}
+
+	// Use CreateThreadByUser which accepts string categories
+	idTo, err := dbManager.CreateThreadByUser(topic, body, currentUser.Id, selected, selected2)
+	if err != nil {
+		utils.InternalServerError(writer, request, err)
+		return
+	}
+
+	http.Redirect(writer, request, "/thread/read?id="+strconv.Itoa(int(idTo)), http.StatusFound)
 }
 
 // GET /thread/read
@@ -73,59 +86,85 @@ func ReadThread(writer http.ResponseWriter, request *http.Request) {
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		utils.ErrorMessage(writer, request, "Database connection unavailable")
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	thread := data.Thread{}
 	var err error
 	id := request.URL.Query().Get("id")
-	resid, _ := strconv.Atoi(id)
-	// userFrom := *GetCurrentUser(request)
-	thread, err = dbManager.GetThreadWithPosts(resid)
 
+	// Validate thread ID
+	if id == "" {
+		utils.BadRequest(writer, request, "Thread ID is required")
+		return
+	}
+
+	resid, err := strconv.Atoi(id)
 	if err != nil {
-		utils.ErrorMessage(writer, request, "Cannot read thread")
-	} else {
-		// Check authentication status to determine which template to use
-		if IsAuthenticated(request) {
-			utils.GenerateHTML(writer, &thread, "layout", "private.navbar", "private.thread")
+		utils.BadRequest(writer, request, "Invalid thread ID format")
+		return
+	}
+
+	thread, err = dbManager.GetThreadWithPosts(resid)
+	if err != nil {
+		// Check if it's a "not found" error vs other database errors
+		if err.Error() == "sql: no rows in result set" {
+			utils.NotFound(writer, request)
 		} else {
-			utils.GenerateHTML(writer, &thread, "layout", "public.navbar", "public.thread")
+			utils.InternalServerError(writer, request, err)
 		}
+		return
+	}
+
+	// Check authentication status to determine which template to use
+	if IsAuthenticated(request) {
+		utils.GenerateHTML(writer, &thread, "layout", "private.navbar", "private.thread")
+	} else {
+		utils.GenerateHTML(writer, &thread, "layout", "public.navbar", "public.thread")
 	}
 }
 
 func ThreadLikes(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("Thread Like/Dislike POSTING processes started")
-	
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	URLID := request.URL.Query().Get("idlikes")
-	URLIDConv, _ := strconv.Atoi(URLID)
+	if URLID == "" {
+		utils.BadRequest(writer, request, "Thread ID is required")
+		return
+	}
+
+	URLIDConv, err := strconv.Atoi(URLID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid thread ID format")
+		return
+	}
+
 	fmt.Print(URLID)
 	fmt.Print(" /// ")
-	
+
 	likes, err := dbManager.GetThreadLikes(URLIDConv)
 	if err != nil {
-		http.Error(writer, "Cannot get thread likes", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
-	
+
 	var props data.ThreadLikeProperties
 	props.Li = likes
-	
+
 	dislikes, err := dbManager.GetThreadDislikes(URLIDConv)
 	if err != nil {
-		http.Error(writer, "Cannot get thread dislikes", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
-	
+
 	fmt.Println(dislikes)
 	props.Di = dislikes
 	templates := template.Must(template.ParseFiles("templates/threadLikes.html"))
@@ -135,16 +174,25 @@ func ThreadLikes(writer http.ResponseWriter, request *http.Request) {
 // POST /likes
 func PostLike(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("Post Like processes ")
-	
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
-	
+
 	LIKEDID := request.URL.Query().Get("idlikes")
-	postID2, _ := strconv.Atoi(LIKEDID)
+	if LIKEDID == "" {
+		utils.BadRequest(writer, request, "Post ID is required")
+		return
+	}
+
+	postID2, err := strconv.Atoi(LIKEDID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid post ID format")
+		return
+	}
 
 	// Get current user ID for checking likes
 	var currentUserID int = -1
@@ -157,20 +205,20 @@ func PostLike(writer http.ResponseWriter, request *http.Request) {
 
 	likes, err := dbManager.GetLikes(postID2)
 	if err != nil {
-		http.Error(writer, "Cannot get post likes", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
 	dislikes, err := dbManager.GetDislikes(postID2)
 	if err != nil {
-		http.Error(writer, "Cannot get post dislikes", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
 	var props data.LikeProperties
 	props.Li = likes
 	props.Di = dislikes
-	
+
 	for i, g := range props.Li {
 		if g.UserId == currentUserID {
 			props.Li[i].UserLiked = true
@@ -181,47 +229,62 @@ func PostLike(writer http.ResponseWriter, request *http.Request) {
 			props.Di[i].UserDisliked = true
 		}
 	}
-	
+
 	templates := template.Must(template.ParseFiles("templates/likes.html"))
 	templates.Execute(writer, &props)
 }
 
 func ApplyThreadLikes(writer http.ResponseWriter, request *http.Request) {
-	fmt.Println("ApplyThreadLikes processes")
-	
+	fmt.Println("Thread Like process")
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		writer.Write([]byte("You are guest:)"))
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		writer.Write([]byte("You are guest:)"))
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		log.Println("[ERROR] in ApplyThreadLikes:", err)
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
-	userId := request.PostFormValue("userUSER") // thread creator userid
-	sook := request.PostFormValue("okay")       // thread id
-	userId2, _ := strconv.Atoi(userId)
-	threadID, _ := strconv.Atoi(sook)
+	postID := request.PostFormValue("userUSER2") // thread creator userid
+	sook := request.PostFormValue("okay2")       // thread id
+
+	if postID == "" || sook == "" {
+		utils.BadRequest(writer, request, "Missing required parameters")
+		return
+	}
+
+	creatorID, err := strconv.Atoi(postID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid creator ID format")
+		return
+	}
+
+	threadID, err := strconv.Atoi(sook)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid thread ID format")
+		return
+	}
 
 	// Check if user is trying to like their own thread
-	if currentUser.Id == userId2 {
-		writer.Write([]byte("You are creator:)"))
+	if currentUser.Id == creatorID {
+		utils.BadRequest(writer, request, "You cannot like your own thread")
 		return
 	}
 
@@ -253,40 +316,55 @@ func ApplyThreadLikes(writer http.ResponseWriter, request *http.Request) {
 
 func ApplyThreadDislikes(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("Thread Dislike processes")
-	
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		writer.Write([]byte("You are guest:)"))
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		writer.Write([]byte("You are guest:)"))
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		log.Println("[ERROR] in ApplyThreadDislikes:", err)
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
 	postID := request.PostFormValue("userUSER2") // thread creator userid
 	sook := request.PostFormValue("okay2")       // thread id
-	creatorID, _ := strconv.Atoi(postID)
-	threadID, _ := strconv.Atoi(sook)
+
+	if postID == "" || sook == "" {
+		utils.BadRequest(writer, request, "Missing required parameters")
+		return
+	}
+
+	creatorID, err := strconv.Atoi(postID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid creator ID format")
+		return
+	}
+
+	threadID, err := strconv.Atoi(sook)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid thread ID format")
+		return
+	}
 
 	// Check if user is trying to dislike their own thread
 	if currentUser.Id == creatorID {
-		writer.Write([]byte("You are creator:)"))
+		utils.BadRequest(writer, request, "You cannot dislike your own thread")
 		return
 	}
 
@@ -318,40 +396,55 @@ func ApplyThreadDislikes(writer http.ResponseWriter, request *http.Request) {
 
 func AcceptLike(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("handler AcceptLike just started.")
-	
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		log.Println("[ERROR] in AcceptLike:", err)
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
 	postID := request.PostFormValue("userUSER") // post id
 	sook := request.PostFormValue("okay")       // post creator id
-	postID2, _ := strconv.Atoi(postID)
-	creatorID, _ := strconv.Atoi(sook)
+
+	if postID == "" || sook == "" {
+		utils.BadRequest(writer, request, "Missing required parameters")
+		return
+	}
+
+	postID2, err := strconv.Atoi(postID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid post ID format")
+		return
+	}
+
+	creatorID, err := strconv.Atoi(sook)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid creator ID format")
+		return
+	}
 
 	// Check if user is trying to like their own post
 	if currentUser.Id == creatorID {
-		http.Redirect(writer, request, "/err?msg=You cannot like your own post", 302)
+		utils.BadRequest(writer, request, "You cannot like your own post")
 		return
 	}
 
@@ -376,47 +469,62 @@ func AcceptLike(writer http.ResponseWriter, request *http.Request) {
 			log.Println("[ERROR] applying like:", err)
 		}
 	}
-	
+
 	ourstr := fmt.Sprintf("/likes?idlikes=%v", postID)
 	http.Redirect(writer, request, ourstr, 302)
 }
 
 func AcceptDislike(writer http.ResponseWriter, request *http.Request) {
 	fmt.Println("handler AcceptDislike just started.")
-	
+
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		http.Redirect(writer, request, "/err?msg=You are guest, please login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		log.Println("[ERROR] in AcceptDislike:", err)
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
 	postID := request.PostFormValue("userUSER2") // post id
 	sook := request.PostFormValue("okay2")       // post creator id
-	postID2, _ := strconv.Atoi(postID)
-	creatorID, _ := strconv.Atoi(sook)
+
+	if postID == "" || sook == "" {
+		utils.BadRequest(writer, request, "Missing required parameters")
+		return
+	}
+
+	postID2, err := strconv.Atoi(postID)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid post ID format")
+		return
+	}
+
+	creatorID, err := strconv.Atoi(sook)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid creator ID format")
+		return
+	}
 
 	// Check if user is trying to dislike their own post
 	if currentUser.Id == creatorID {
-		http.Redirect(writer, request, "/err?msg=You cannot dislike your own post", 302)
+		utils.BadRequest(writer, request, "You cannot dislike your own post")
 		return
 	}
 
@@ -441,7 +549,7 @@ func AcceptDislike(writer http.ResponseWriter, request *http.Request) {
 			log.Println("[ERROR] applying dislike:", err)
 		}
 	}
-	
+
 	ourstr := fmt.Sprintf("/likes?idlikes=%v", postID)
 	http.Redirect(writer, request, ourstr, 302)
 }
@@ -452,41 +560,60 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 	// Get database manager from context
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database connection unavailable", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {
-		http.Redirect(writer, request, "/login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	currentUser := GetCurrentUser(request)
 	if currentUser == nil {
-		http.Redirect(writer, request, "/login", 302)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		utils.Danger(err, "Cannot parse form")
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
 	body := request.PostFormValue("body")
 	id := request.PostFormValue("id")
-	threadID, _ := strconv.Atoi(id)
-	
+
+	// Validate required fields
+	if body == "" {
+		utils.BadRequest(writer, request, "Post body is required")
+		return
+	}
+	if id == "" {
+		utils.BadRequest(writer, request, "Thread ID is required")
+		return
+	}
+
+	threadID, err := strconv.Atoi(id)
+	if err != nil {
+		utils.BadRequest(writer, request, "Invalid thread ID format")
+		return
+	}
+
 	thread, err := dbManager.GetThreadByID(threadID)
 	if err != nil {
-		utils.ErrorMessage(writer, request, "Cannot read thread")
+		if err.Error() == "sql: no rows in result set" {
+			utils.NotFound(writer, request)
+		} else {
+			utils.InternalServerError(writer, request, err)
+		}
 		return
 	}
 
 	_, err = dbManager.CreatePost(thread.Id, body, currentUser.Id)
 	if err != nil {
-		utils.Danger(err, "Cannot create post")
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 

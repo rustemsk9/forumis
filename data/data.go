@@ -44,15 +44,17 @@ type Thread struct {
 	NumReplies    int
 	Len           int
 	//
-	Cards          []Post
-	LikedPosts     []Post
-	LengthOfPosts  int
-	ThreadCategory int
-	LikesCount     int
-	DislikesCount  int
-	UserLiked      bool
-	Category1      string
-	Category2      string
+	Cards            []Post
+	LikedPosts       []Post
+	UserLikedThreads []Thread // Threads liked by the user
+	LengthOfPosts    int
+	ThreadCategory   int
+	LikesCount       int
+	DislikesCount    int
+	UserLiked        bool
+	UserDisliked     bool
+	Category1        string
+	Category2        string
 }
 
 type LikeProperties struct {
@@ -98,13 +100,14 @@ type ThreadDislikes struct {
 }
 
 type Post struct {
-	Id        int
-	Uuid      string
-	Body      string
-	UserId    int
-	ThreadId  int
-	CreatedAt time.Time
-	User      string // User information for template access
+	Id            int
+	Uuid          string
+	Body          string
+	UserId        int
+	ThreadId      int
+	CreatedAt     time.Time
+	FormattedDate string // formatted creation date for template access
+	User          string // User information for template access
 }
 
 // create a random UUID with from RFC 4122

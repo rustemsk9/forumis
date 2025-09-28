@@ -7,13 +7,17 @@
       <br />
       Email : {{ $user.Email }}
       <br />
-      Created at : {{ slice (print $user.CreatedAt) 0 16 }}
+      Created at : {{ slice (print $user.CreatedAt) 0 16 }} {{ end }}
     </a>
     <br />
   </div>
+
   <div class="container-lg p-2" style="padding-top: 150px">
     <h4>User Threads:</h4>
-    {{ range . }}
+    {{ if lt (len .) 1 }}
+    <p class="lead">No data available.</p>
+    {{ else }} {{ $hasUserThreads := false }} {{ range . }} {{ if and .Topic .Id
+    }} {{ $hasUserThreads = true }}
     <div class="panel panel-default p-2">
       <div class="panel-heading">
         <span class="lead text-break">
@@ -21,7 +25,10 @@
           {{ .Topic }}
         </span>
       </div>
-      <div class="container-lg p-2 shadow-sm" style="border-bottom: solid 2px black">
+      <div
+        class="small container-lg p-2 shadow-sm"
+        style="border-bottom: solid 2px black"
+      >
         Started by
         <a class="lead" href="/account?user_id={{.UserId}}">{{ .User }}</a>
         - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.
@@ -30,9 +37,39 @@
         </div>
       </div>
     </div>
+    {{ end }} {{ end }} {{ if not $hasUserThreads }}
+    <p class="lead">No threads started yet.</p>
+    {{ end }} {{ end }}
   </div>
 
+  <!-- User Liked Threads Section -->
+  {{ if . }} {{ $user := (index . 0) }} {{ if $user.UserLikedThreads }}
+  <div class="container-lg p-2">
+    <h4>Liked Threads:</h4>
+    {{ range $user.UserLikedThreads }}
+    <div class="panel panel-default p-2">
+      <div class="panel-heading">
+        <span class="lead text-break">
+          <i class="fa fa-heart text-danger"></i>
+          {{ .Topic }}
+        </span>
+      </div>
+      <div
+        class="small container-lg p-2 shadow-sm"
+        style="border-bottom: solid 2px black"
+      >
+        Started by
+        <a class="lead" href="/account?user_id={{.UserId}}">{{ .User }}</a>
+        - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.
+        <div class="pull-right">
+          <a href="/thread/read?id={{.Id }}">Read more</a>
+        </div>
+      </div>
+    </div>
+    {{ end }}
+  </div>
   {{ end }} {{ end }}
+
   <div class="container">{{ template "posts" . }}</div>
 </section>
 {{ end }}

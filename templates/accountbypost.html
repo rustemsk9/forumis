@@ -8,10 +8,16 @@
     <!-- if statement for templates  -->
     <div
       class="form-control"
-      style="height: auto; position: relative; max-width: 450px; border-bottom: solid 2px black;"
+      style="
+        height: auto;
+        position: relative;
+        max-width: 450px;
+        border-bottom: solid 2px black;
+      "
     >
       <a class="small" href="/thread/read?id={{ .ThreadId }}">OPEN</a> thread
-      created by: {{ .User }} - {{ .CreatedAtDate }}
+      created by: {{ .User }} - {{ if .FormattedDate }}{{ .FormattedDate }}{{
+      else }}{{ .CreatedAtDate }}{{ end }}
       <a style="word-wrap: break-word; white-space: unset" class="small"
         ><br />{{ .User }}: {{ .Body }}</a
       >
@@ -32,7 +38,8 @@
       "
     >
       <a class="small" href="/thread/read?id={{ .ThreadId }}">OPEN</a> thread
-      created by: <a class="small">{{ .User }} </a>- {{ .CreatedAtDate }}
+      created by: <a class="small">{{ .User }} </a>- {{ if .FormattedDate }}{{
+      .FormattedDate }}{{ else }}{{ .CreatedAtDate }}{{ end }}
       <a style="word-wrap: break-word; white-space: unset" class="small"
         ><br />{{ .User }}: {{ .Body }}</a
       >

@@ -2,9 +2,12 @@ package routes
 
 import (
 	"encoding/json"
+	"fmt"
 	"net/http"
 	"strconv"
 	"strings"
+
+	"forum/utils"
 )
 
 type ThreadCounts struct {
@@ -23,7 +26,7 @@ type ThreadVoteStatus struct {
 func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database not available"))
 		return
 	}
 
@@ -31,27 +34,27 @@ func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	threadIdStr := parts[3] // /api/thread/{id}/counts
 	threadId, err := strconv.Atoi(threadIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid thread ID format")
 		return
 	}
 
 	// Get likes and dislikes count using DatabaseManager
 	likesCount, err := dbManager.GetThreadLikesCount(threadId)
 	if err != nil {
-		http.Error(writer, "Failed to get likes count", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
 	dislikesCount, err := dbManager.GetThreadDislikesCount(threadId)
 	if err != nil {
-		http.Error(writer, "Failed to get dislikes count", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
@@ -67,13 +70,13 @@ func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 // POST /api/thread/{id}/like
 func LikeThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.BadRequest(writer, request, "Method not allowed")
 		return
 	}
 
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -81,35 +84,35 @@ func LikeThread(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	threadIdStr := parts[3] // /api/thread/{id}/like
 	threadId, err := strconv.Atoi(threadIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid thread ID format")
 		return
 	}
 
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	// Check if thread exists
 	_, err = dbManager.GetThreadByID(threadId)
 	if err != nil {
-		http.Error(writer, "Thread not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
 	// Apply the like using smart function
 	err = dbManager.SmartApplyThreadLike(user.Id, threadId)
 	if err != nil {
-		http.Error(writer, "Failed to process like", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
@@ -132,13 +135,13 @@ func LikeThread(writer http.ResponseWriter, request *http.Request) {
 // POST /api/thread/{id}/dislike
 func DislikeThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.BadRequest(writer, request, "Method not allowed")
 		return
 	}
 
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -146,35 +149,35 @@ func DislikeThread(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	threadIdStr := parts[3] // /api/thread/{id}/dislike
 	threadId, err := strconv.Atoi(threadIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid thread ID format")
 		return
 	}
 
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	// Check if thread exists
 	_, err = dbManager.GetThreadByID(threadId)
 	if err != nil {
-		http.Error(writer, "Thread not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
 	// Apply the dislike using smart function
 	err = dbManager.SmartApplyThreadDislike(user.Id, threadId)
 	if err != nil {
-		http.Error(writer, "Failed to process dislike", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
@@ -198,7 +201,7 @@ func DislikeThread(writer http.ResponseWriter, request *http.Request) {
 func GetThreadVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -206,21 +209,21 @@ func GetThreadVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	threadIdStr := parts[3] // /api/thread/{id}/status
 	threadId, err := strconv.Atoi(threadIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid thread ID format")
 		return
 	}
 
 	// Check if thread exists
 	_, err = dbManager.GetThreadByID(threadId)
 	if err != nil {
-		http.Error(writer, "Thread not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
@@ -246,13 +249,13 @@ func GetThreadVoteStatus(writer http.ResponseWriter, request *http.Request) {
 // POST /api/thread/{id}/vote - Generic vote endpoint
 func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.BadRequest(writer, request, "Method not allowed")
 		return
 	}
 
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -263,28 +266,28 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	threadIdStr := parts[3] // /api/thread/{id}/vote
 	threadId, err := strconv.Atoi(threadIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid thread ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid thread ID format")
 		return
 	}
 
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		http.Redirect(writer, request, "/login", http.StatusSeeOther)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	// Check if thread exists
 	_, err = dbManager.GetThreadByID(threadId)
 	if err != nil {
-		http.Error(writer, "Thread not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
 	// Parse form to get vote type
 	err = request.ParseForm()
 	if err != nil {
-		http.Error(writer, "Invalid form data", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Cannot parse form data")
 		return
 	}
 
@@ -302,11 +305,35 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	if err != nil {
-		http.Error(writer, "Failed to process vote", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
-	// Redirect back to where the user came from or to the thread page
+	// Check if this is an AJAX request by looking for Accept header or Fetch API
+	acceptHeader := request.Header.Get("Accept")
+	isAjax := strings.Contains(acceptHeader, "application/json") ||
+		request.Header.Get("X-Requested-With") == "XMLHttpRequest"
+
+	if isAjax {
+		// Return JSON response for AJAX
+		likesCount, _ := dbManager.GetThreadLikesCount(threadId)
+		dislikesCount, _ := dbManager.GetThreadDislikesCount(threadId)
+		userLiked := dbManager.HasThreadLiked(user.Id, threadId)
+		userDisliked := dbManager.HasThreadDisliked(user.Id, threadId)
+
+		response := ThreadVoteStatus{
+			Likes:        likesCount,
+			Dislikes:     dislikesCount,
+			UserLiked:    userLiked,
+			UserDisliked: userDisliked,
+		}
+
+		writer.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(writer).Encode(response)
+		return
+	}
+
+	// Traditional form submission - redirect back
 	redirectTo := request.Header.Get("Referer")
 	if redirectTo == "" {
 		redirectTo = "/#thread-" + strconv.Itoa(threadId-3) + "#thread-" + strconv.Itoa(threadId+3)
@@ -320,7 +347,7 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 // POST /api/post/{id}/like
 func LikePost(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.BadRequest(writer, request, "Method not allowed")
 		return
 	}
 
@@ -328,42 +355,42 @@ func LikePost(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	postIdStr := parts[3] // /api/post/{id}/like
 	postId, err := strconv.Atoi(postIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid post ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid post ID format")
 		return
 	}
 
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	// Get database manager
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Verify the post exists
 	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
-		http.Error(writer, "Post not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
 	// Apply the like using smart function
 	err = dbManager.SmartApplyPostLike(user.Id, postId)
 	if err != nil {
-		http.Error(writer, "Failed to process like", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
@@ -387,7 +414,7 @@ func LikePost(writer http.ResponseWriter, request *http.Request) {
 // POST /api/post/{id}/dislike
 func DislikePost(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
-		http.Error(writer, "Method not allowed", http.StatusMethodNotAllowed)
+		utils.BadRequest(writer, request, "Method not allowed")
 		return
 	}
 
@@ -395,42 +422,42 @@ func DislikePost(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	postIdStr := parts[3] // /api/post/{id}/dislike
 	postId, err := strconv.Atoi(postIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid post ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid post ID format")
 		return
 	}
 
 	// Get current user from middleware
 	user := GetCurrentUser(request)
 	if user == nil {
-		http.Error(writer, "Unauthorized", http.StatusUnauthorized)
+		utils.Unauthorized(writer, request, "Authentication required")
 		return
 	}
 
 	// Get database manager
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Verify the post exists
 	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
-		http.Error(writer, "Post not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
 	// Apply the dislike using smart function
 	err = dbManager.SmartApplyPostDislike(user.Id, postId)
 	if err != nil {
-		http.Error(writer, "Failed to process dislike", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
 
@@ -457,14 +484,14 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
-		http.Error(writer, "Invalid URL", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid URL format")
 		return
 	}
 
 	postIdStr := parts[3] // /api/post/{id}/status
 	postId, err := strconv.Atoi(postIdStr)
 	if err != nil {
-		http.Error(writer, "Invalid post ID", http.StatusBadRequest)
+		utils.BadRequest(writer, request, "Invalid post ID format")
 		return
 	}
 
@@ -474,14 +501,14 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	// Get database manager
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		http.Error(writer, "Database not available", http.StatusInternalServerError)
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	// Verify the post exists
 	_, err = dbManager.GetPostByID(postId)
 	if err != nil {
-		http.Error(writer, "Post not found", http.StatusNotFound)
+		utils.NotFound(writer, request)
 		return
 	}
 
@@ -505,4 +532,17 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 
 	writer.Header().Set("Content-Type", "application/json")
 	json.NewEncoder(writer).Encode(status)
+}
+
+func ApiStatus(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != "POST" {
+		utils.BadRequest(writer, request, "Method not allowed")
+		return
+	}
+	// Get current user from middleware
+	user := GetCurrentUser(request)
+	if user == nil {
+		utils.Unauthorized(writer, request, "Authentication required")
+		return
+	}
 }

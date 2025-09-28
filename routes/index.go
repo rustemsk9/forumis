@@ -24,7 +24,7 @@ func Err(writer http.ResponseWriter, request *http.Request) {
 func Index(writer http.ResponseWriter, request *http.Request) {
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		utils.ErrorMessage(writer, request, "Database not available")
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -105,7 +105,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			sortBy = request.URL.Query().Get("sort")
 			reset = request.URL.Query().Get("reset")
 		} else {
-			utils.ErrorMessage(writer, request, "Error retrieving data on threads")
+			utils.BadRequest(writer, request, "Cannot parse form data")
 			return
 		}
 
@@ -138,12 +138,12 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 				threads, err = data.SortThreadsByLatest(threads)
 			}
 			if err != nil {
-				utils.ErrorMessage(writer, request, "Error retrieving threads")
+				utils.InternalServerError(writer, request, err)
 				return
 			}
 		}
 	} else {
-		utils.ErrorMessage(writer, request, "Unsupported request method")
+		utils.BadRequest(writer, request, "Unsupported request method")
 		return
 	}
 
@@ -153,6 +153,11 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		userName := ""
 		if user != nil {
 			userName = user.Name
+			// Populate user-specific vote information for each thread
+			for i := range threads {
+				threads[i].UserLiked = dbManager.HasThreadLiked(user.Id, threads[i].Id)
+				threads[i].UserDisliked = dbManager.HasThreadDisliked(user.Id, threads[i].Id)
+			}
 		}
 
 		// Create expanded data structure
@@ -200,6 +205,6 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			utils.GenerateHTML(writer, pageData, "layout", "public.navbar", "index")
 		}
 	} else {
-		utils.ErrorMessage(writer, request, "Empty forum. No threads found.")
+		utils.NotFound(writer, request)
 	}
 }

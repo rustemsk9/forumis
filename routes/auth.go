@@ -27,26 +27,26 @@ func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin)
 		Error = ""
 		return
 	} else {
-	if Error != "" {
-		LS = data.LoginSkin{
-			Submit: "Again",
-			Signup: "Signup",
-			Name:   LS.Name,
-			Email:  LS.Email,
-			Error:  Error,
+		if Error != "" {
+			LS = data.LoginSkin{
+				Submit: "Again",
+				Signup: "Signup",
+				Name:   LS.Name,
+				Email:  LS.Email,
+				Error:  Error,
+			}
+		} else {
+			LS = data.LoginSkin{
+				Submit: "Submit",
+				Signup: "Signup",
+				Name:   LS.Name,
+				Email:  LS.Email,
+				Error:  "",
+			}
 		}
-	} else {
-		LS = data.LoginSkin{
-			Submit: "Submit",
-			Signup: "Signup",
-			Name:   LS.Name,
-			Email:  LS.Email,
-			Error:  "",
-		}
-	}
-	
-	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
-	Error = ""
+
+		utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "login")
+		Error = ""
 	}
 }
 
@@ -80,19 +80,33 @@ func Signup(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		utils.ErrorMessage(writer, request, "Database not available")
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
 	err := request.ParseForm()
 	if err != nil {
-		utils.Danger(err, "Cannot parse form")
+		utils.BadRequest(writer, request, "Cannot parse form data")
+		return
 	}
-	
+
 	// Check if user already exists
 	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
 	if checkExists {
 		Error = "This name/email already exists\nTry to signup again using different username/email"
+		user := data.LoginSkin{
+			Submit: "Try Again",
+			Signup: "Signup",
+			Name:   request.PostFormValue("name"),
+			Email:  request.PostFormValue("email"),
+			Error:  Error,
+		}
+		Signup(writer, request, user)
+		return
+	}
+
+	if ok := utils.PasswordMeetsCriteria(writer, request, request.PostFormValue("password")); !ok {
+		Error = "Password must contain uppercase, lowercase, number, and symbol"
 		user := data.LoginSkin{
 			Submit: "Try Again",
 			Signup: "Signup",
@@ -109,22 +123,13 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 		Email:    request.PostFormValue("email"),
 		Password: request.PostFormValue("password"),
 	}
-	
+
 	// Use database manager to create user
 	if err := dbManager.CreateUser(&usertoSign); err != nil {
-		utils.Danger(err, "Cannot create user")
-		Error = "Internal server error\nPlease try again later"
-		user := data.LoginSkin{
-			Submit: "Try Again",
-			Signup: "Signup",
-			Name:   request.PostFormValue("name"),
-			Email:  request.PostFormValue("email"),
-			Error:  Error,
-		}
-		Signup(writer, request, user)
+		utils.InternalServerError(writer, request, err)
 		return
 	}
-	
+
 	http.Redirect(writer, request, "/login/success", 302)
 }
 
@@ -133,7 +138,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	dbManager := GetDatabaseManager(request)
 	if dbManager == nil {
-		utils.ErrorMessage(writer, request, "Database not available")
+		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -143,10 +148,16 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	case "POST":
 		err := request.ParseForm()
 		if err != nil {
-			utils.Danger(err, "Cannot parse form")
+			utils.BadRequest(writer, request, "Cannot parse form data")
+			return
 		}
 		email := request.PostFormValue("email")
 		password := request.PostFormValue("password")
+
+		if email == "" || password == "" {
+			utils.BadRequest(writer, request, "Email and password are required")
+			return
+		}
 
 		fmt.Printf("Login attempt for email: %s\n", email)
 
@@ -154,8 +165,7 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 		user, err := dbManager.GetUserByEmail(email)
 		if err != nil {
 			fmt.Printf("User not found for email: %s, error: %v\n", email, err)
-			Error = "You might entered wrong email/password \n Try again"
-			Login(writer, request, data.LoginSkin{})
+			utils.Unauthorized(writer, request, "Invalid email or password")
 			return
 		}
 
@@ -176,7 +186,7 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 			session, err := dbManager.CreateSession(&user)
 			if err != nil {
 				fmt.Printf("Failed to create session: %v\n", err)
-				utils.Danger(err, "Cannot create session")
+				utils.InternalServerError(writer, request, err)
 				return
 			}
 

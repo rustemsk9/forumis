@@ -36,3 +36,24 @@
 [ERROR] 2025/09/26 14:46:28 util.go:60: sql: no rows in result set Cannot create user
 [ERROR] 2025/09/26 21:18:42 util.go:60: sql: no rows in result set Cannot create user
 [ERROR] 2025/09/26 21:56:39 util.go:60: sql: no rows in result set Cannot create user
+[ERROR] 2025/09/28 21:31:19 util.go:145: Internal server error: template: account.html:16:10: executing "content" at <.Threads>: can't evaluate field Threads in type *[]data.Thread
+[ERROR] 2025/09/28 21:31:24 util.go:145: Internal server error: template: account.html:16:10: executing "content" at <.Threads>: can't evaluate field Threads in type *[]data.Thread
+[ERROR] 2025/09/28 21:31:34 util.go:145: Internal server error: template: account.html:16:10: executing "content" at <.Threads>: can't evaluate field Threads in type *[]data.Thread
+[ERROR] 2025/09/28 22:52:33 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 22:52:35 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 22:52:40 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:09:27 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:30:48 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:33:29 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:33:33 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:33:35 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:33:44 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:36:04 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:36:08 util.go:169: Internal server error: template: account.html:6:30: executing "content" at <index . 0>: error calling index: reflect: slice index out of range
+[ERROR] 2025/09/28 23:56:15 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
+[ERROR] 2025/09/28 23:56:18 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
+[ERROR] 2025/09/28 23:56:24 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
+[ERROR] 2025/09/28 23:57:04 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
+[ERROR] 2025/09/28 23:57:10 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
+[ERROR] 2025/09/28 23:58:02 util.go:183: Internal server error: panic: template: account.html:75: unexpected EOF
+[ERROR] 2025/09/28 23:58:20 util.go:183: Internal server error: panic: template: account.html:75: unexpected EOF

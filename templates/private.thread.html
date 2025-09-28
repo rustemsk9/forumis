@@ -8,13 +8,12 @@
   <div id="starter"></div>
   <div class="panel panel-default">
       <i>Topic</i>
-      <div style="background-color: wheat" class="card-header lead text-break bg-light d-flex">
+      <div style="background-color: wheat" class="card-header lead text-break bg-light">
         <i class="lead">{{ .Topic }}</i><br>
       </div>
       <i>Text</i>
-        <div style="background-color: wheat" class="text-break card-body">
-
-          <text class="small">{{ .Body }}</text>
+        <div style="background-color: wheat" class="text-break card">
+            <text class="lead">&#128172; {{ .Body }}</text>
         </div>
         <br>
         </div>
@@ -38,9 +37,9 @@
 
 
 
-  <a class="text-break d-flex"
-  ><i class="fa-comment me-2" style="font-size: 16px; cursor: pointer;">{{ .Body }}</i></a
-  >
+  
+  <i class="fa fa-comment me-2 text-break" style="font-size: 16px; cursor: pointer;"><a>&#128172;</a
+  > {{ .Body }}</i>
     <div
       class="d-flex justify-content-between align-items-center me-2 border rounded"
     >
@@ -54,7 +53,7 @@
       <!-- Post like/dislike buttons -->
       <div class="pull-right justify-content-between">
         <button
-          class="btn btn-small btn-success like-btn"
+          class="btn btn-small btn-success1 like-btn"
           data-post-id="{{ .Id }}"
           onclick="likePost('{{ .Id }}')"
         >
@@ -62,7 +61,7 @@
           <span id="post-likes-{{ .Id }}">0</span>
         </button>
         <button
-          class="btn btn-small btn-danger dislike-btn"
+          class="btn btn-small btn-danger1 dislike-btn"
           data-post-id="{{ .Id }}"
           onclick="dislikePost('{{ .Id }}')"
         >

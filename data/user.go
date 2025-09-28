@@ -15,13 +15,13 @@ func InitUserDM(dm *DatabaseManager) {
 }
 
 type User struct {
-	Id        int
-	Uuid      string
-	Name      string
-	Email     string
-	Password  string
-	Role      string
-	CreatedAt time.Time
+	Id                int
+	Uuid              string
+	Name              string
+	Email             string
+	Password          string
+	Role              string
+	CreatedAt         time.Time
 	PreferedCategory1 string
 	PreferedCategory2 string
 	// LikedPosts []Likes
@@ -72,7 +72,7 @@ func (user *User) Session() (session Session, err error) {
 		return
 	}
 	defer rows.Close()
-	
+
 	if rows.Next() {
 		err = rows.Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
 	}
@@ -127,7 +127,7 @@ func PrepareLikedPosts(userID, postID int) bool {
 		fmt.Println("Error on PrepareLikedPosts")
 		return false
 	}
-	
+
 	for _, like := range likes {
 		if like.PostId == postID {
 			return true
@@ -142,7 +142,7 @@ func PrepareThreadLikedPosts(userID, threadid int) bool {
 		fmt.Println("Error on PrepareThreadLikedPosts")
 		return false
 	}
-	
+
 	for _, like := range likes {
 		if like.ThreadId == threadid {
 			return true
@@ -157,7 +157,7 @@ func PrepareThreadDislikedPosts(userID, threadid int) bool {
 		fmt.Println("Error on PrepareThreadDislikedPosts")
 		return false
 	}
-	
+
 	for _, dislike := range dislikes {
 		if dislike.ThreadId == threadid {
 			return true
@@ -173,7 +173,7 @@ func PrepareDislikedPosts(userID, postID int) bool {
 		fmt.Println("Error on PrepareDislikedPosts")
 		return false
 	}
-	
+
 	for _, dislike := range dislikes {
 		if dislike.PostId == postID {
 			return true
@@ -209,7 +209,7 @@ func IfUserExist(email, name string) bool {
 func GetUserById(userID int) User {
 	user, err := userDM.GetUserByID(userID)
 	if err != nil {
-		return User{} // Return empty user on error
+		return User{}
 	}
 	return user
 }
@@ -226,7 +226,7 @@ func GetUserLikedPosts(userID int) ([]Likes, error) {
 
 func AccountThreads(userID int) ([]Thread, error) {
 	// This function should get all threads created by a specific user
-	// We need to add this method to DatabaseManager  
+	// We need to add this method to DatabaseManager
 	return userDM.GetUserCreatedThreads(userID)
 }
 
@@ -238,7 +238,7 @@ func GetLikesPostsFromDB(likes []Likes) ([]Post, error) {
 		if err != nil {
 			continue // Skip posts that can't be found
 		}
-		
+
 		// Populate User information for the post
 		user, err := userDM.GetPostUser(post.UserId)
 		if err != nil {
@@ -247,9 +247,9 @@ func GetLikesPostsFromDB(likes []Likes) ([]Post, error) {
 		} else {
 			post.User = user.Name
 		}
-		
+
 		// Note: CreatedAtDate formatting will be done by the template method
-		
+
 		posts = append(posts, post)
 	}
 	return posts, nil
