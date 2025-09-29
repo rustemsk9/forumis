@@ -36,13 +36,8 @@ func init() {
 	if err != nil {
 		utils.Danger("Cannot get configuration from file", err)
 	}
-	var num int
-	num++
-	if num == 1 {
-		fmt.Println("[INIT]: INITIALISED NUMBER is 1")
-	} else {
-		fmt.Println("[INIT]: INITIALISED AGAIN")
-	}
+	fmt.Println("Initialized with configuration:\n", config)
+
 }
 
 func main() {
@@ -52,6 +47,17 @@ func main() {
 		return
 	}
 	defer dbManager.Close()
+
+	x := os.Args
+	for _, arg := range x {
+		if arg == "--migrate" {
+			if err := data.RunMigrations(dbManager); err != nil {
+				utils.Danger("Migration error:", err)
+				return
+			}
+			fmt.Println("Database migrations applied successfully.")
+		}
+	}
 
 	data.InitAllDatabaseManagers(dbManager)
 
@@ -109,15 +115,18 @@ func main() {
 			} else {
 				utils.NotFound(w, r)
 			}
+		} else if strings.HasPrefix(path, "/back/") {
+			if !strings.HasSuffix(path, "/back") {
+				utils.NotFound(w, r)
+			}
 		}
+
 	}))
 	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path
 		if strings.HasPrefix(path, "/api/post/") {
 			if strings.HasSuffix(path, "/like") {
 				routes.LikePost(w, r)
-			} else if strings.HasSuffix(path, "/status") {
-				routes.ApiStatus(w, r)
 			} else if strings.HasSuffix(path, "/dislike") {
 				routes.DislikePost(w, r)
 			} else if strings.HasSuffix(path, "/status") {

@@ -203,7 +203,6 @@ func (thread *Thread) GetDislikesCount() int {
 	return len(dislikes)
 }
 
-
 func ApplyLikes(stateLike string, userID int, postID int) {
 	fmt.Println("---------------------")
 	fmt.Println("in database proccess")
@@ -216,4 +215,3 @@ func ApplyDislikes(stateLike string, userID int, postID int) {
 	threadDM.ApplyDislikes(userID, postID)
 
 }
-

@@ -14,6 +14,10 @@ type DatabaseManager struct {
 	db *sql.DB
 }
 
+func (dm *DatabaseManager) DoExec(query string, args ...interface{}) (sql.Result, error) {
+	return dm.db.Exec(query, args...)
+}
+
 // NewDatabaseManager creates a new database manager
 func NewDatabaseManager(dbPath string) (*DatabaseManager, error) {
 	// Add connection string parameters to handle concurrent access better
@@ -1368,7 +1372,7 @@ func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]Thread, error)
 		JOIN threadlikes tl ON t.id = tl.thread_id
 		WHERE tl.user_id = ?
 		ORDER BY t.created_at DESC`, userID)
-	
+
 	if err != nil {
 		return nil, err
 	}
@@ -1377,18 +1381,18 @@ func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]Thread, error)
 	var threads []Thread
 	for rows.Next() {
 		var thread Thread
-		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, 
-			&thread.UserId, &thread.User, &thread.Email, 
+		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body,
+			&thread.UserId, &thread.User, &thread.Email,
 			&thread.CreatedAt, &thread.Category1, &thread.NumReplies)
 		if err != nil {
 			return nil, err
 		}
-		
+
 		// Format created date
 		thread.CreatedAtDate = thread.CreatedAt.Format("2006-01-02 15:04:05")
-		
+
 		threads = append(threads, thread)
 	}
-	
+
 	return threads, rows.Err()
 }

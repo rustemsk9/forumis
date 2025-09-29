@@ -44,11 +44,11 @@
   </div>
   {{ end }}
 </div>
-<div class="container-fluid">
+<div class="container-fluid d-flex">
   {{ if .Threads }}
   <div class="row g-4">
     {{ range .Threads }}
-    {{ if gt .Len 80 }}
+    {{ if gt .Len 60 }}
       <div class="col-md-6">
     {{ else }}
       <div class="col-lg-4">

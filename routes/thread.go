@@ -436,18 +436,6 @@ func AcceptLike(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	creatorID, err := strconv.Atoi(sook)
-	if err != nil {
-		utils.BadRequest(writer, request, "Invalid creator ID format")
-		return
-	}
-
-	// Check if user is trying to like their own post
-	if currentUser.Id == creatorID {
-		utils.BadRequest(writer, request, "You cannot like your own post")
-		return
-	}
-
 	// Handle the like logic
 	if dbManager.PrepareLikedPosts(currentUser.Id, postID2) {
 		// User already liked, remove the like
