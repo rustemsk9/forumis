@@ -3,7 +3,6 @@ package data
 import (
 	"fmt"
 	"net/http"
-	"time"
 )
 
 // Global DatabaseManager instance for user operations
@@ -12,19 +11,6 @@ var userDM *DatabaseManager
 // InitUserDM initializes the global DatabaseManager for user operations
 func InitUserDM(dm *DatabaseManager) {
 	userDM = dm
-}
-
-type User struct {
-	Id                int
-	Uuid              string
-	Name              string
-	Email             string
-	Password          string
-	Role              string
-	CreatedAt         time.Time
-	PreferedCategory1 string
-	PreferedCategory2 string
-	// LikedPosts []Likes
 }
 
 // create a new thread

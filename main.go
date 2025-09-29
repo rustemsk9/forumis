@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"encoding/json"
 	"fmt"
 	"net/http"
@@ -148,19 +149,41 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	server.ListenAndServe()
-	fmt.Println("Server started : on 8080")
+	// server.ListenAndServe()
+	// fmt.Println("Server started : on 8080")
 
-	quit := make(chan os.Signal, 1)
-	signal.Notify(quit, os.Interrupt)
-	switch <-quit {
-	case os.Interrupt:
-		fmt.Println("Shutting down server...")
-		dbManager.Close()
-		err = dbManager.Ping()
-		if err != nil {
-			fmt.Println("Connection is closed:", err)
+	// Setup signal channel
+	stop := make(chan os.Signal, 1)
+	signal.Notify(stop, os.Interrupt)
+
+	// Start server in a goroutine
+	go func() {
+		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
+			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
+	}()
+	fmt.Println("Server started : on", config.Address)
+
+	// Wait for interrupt signal
+	<-stop
+	fmt.Println("Shutting down server...")
+
+	// Create context with timeout for shutdown
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	defer cancel()
+
+	if err := server.Shutdown(ctx); err != nil {
+		fmt.Printf("Server Shutdown Failed:%+v\n", err)
+	} else {
+		fmt.Println("Server exited properly")
 	}
-	server.Close()
+
+	// Close database connection
+	dbManager.Close()
+	err = dbManager.Ping()
+	if err != nil {
+		fmt.Println("Database is closed or unreachable:", err)
+	} else {
+		fmt.Println("Database connection is open.")
+	}
 }

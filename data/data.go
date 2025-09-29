@@ -13,6 +13,19 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 )
 
+type User struct {
+	Id                int
+	Uuid              string
+	Name              string
+	Email             string
+	Password          string
+	Role              string
+	CreatedAt         time.Time
+	PreferedCategory1 string
+	PreferedCategory2 string
+	// LikedPosts []Likes
+}
+
 type LoginSkin struct {
 	Submit string
 	Signup string
@@ -149,7 +162,6 @@ func InitAllDatabaseManagers(dm *DatabaseManager) {
 	InitStatsDM(dm)
 	InitUserDM(dm)
 	InitThreadDM(dm)
-	InitTestDM(dm)
 }
 
 // RunMigrations ensures that all required tables are present.

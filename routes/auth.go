@@ -164,8 +164,8 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 		// Use database manager to get user
 		user, err := dbManager.GetUserByEmail(email)
 		if err != nil {
-			fmt.Printf("User not found for email: %s, error: %v\n", email, err)
-			utils.Unauthorized(writer, request, "Invalid email or password")
+			Error = "You might entered wrong email/password \n Try again"
+			Login(writer, request, data.LoginSkin{})
 			return
 		}
 

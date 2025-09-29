@@ -1,4 +1,4 @@
-package main
+package test
 
 import (
 	"database/sql"
@@ -12,12 +12,12 @@ import (
 )
 
 type User struct {
-	Id        int
-	Uuid      string
-	Name      string
-	Email     string
-	Password  string
-	CreatedAt time.Time
+	Id                int
+	Uuid              string
+	Name              string
+	Email             string
+	Password          string
+	CreatedAt         time.Time
 	PreferedCategory1 string
 	PreferedCategory2 string
 }
@@ -39,6 +39,7 @@ func Encrypt(plaintext string) string {
 }
 
 var testDm *DatabaseManager
+
 func InitTestDM(dm *DatabaseManager) {
 	// Initialize test data
 	testDm = dm
@@ -88,9 +89,9 @@ func UserByEmail(email string) (user User, err error) {
 
 func main() {
 	user := User{
-		Name:     "TestUser2",
-		Email:    "test2@example.com",
-		Password: Encrypt("password123"),
+		Name:              "TestUser2",
+		Email:             "test2@example.com",
+		Password:          Encrypt("password123"),
 		PreferedCategory1: "AI-theme",
 		PreferedCategory2: "Creativity",
 	}
