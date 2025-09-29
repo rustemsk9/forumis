@@ -17,7 +17,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 		fmt.Println("Error during user creation:", err)
 		return err
 	}
-	
+}
 	// Get the last inserted ID
 	lastId, err := result.LastInsertId()
 	if err != nil {

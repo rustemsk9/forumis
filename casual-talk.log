@@ -57,3 +57,13 @@
 [ERROR] 2025/09/28 23:57:10 util.go:183: Internal server error: panic: template: account.html:78: unexpected EOF
 [ERROR] 2025/09/28 23:58:02 util.go:183: Internal server error: panic: template: account.html:75: unexpected EOF
 [ERROR] 2025/09/28 23:58:20 util.go:183: Internal server error: panic: template: account.html:75: unexpected EOF
+[ERROR] 2025/09/29 14:17:04 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:05 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:05 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:09 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:09 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:15 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:17:15 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:18:23 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:18:24 util.go:183: Internal server error: sql: database is closed
+[ERROR] 2025/09/29 14:18:24 util.go:183: Internal server error: sql: database is closed

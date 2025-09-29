@@ -37,26 +37,33 @@ func TestSortThreadsByLikes() {
 	}
 }
 
-func Testing_data(t *testing.T) {
+func TestData(t *testing.T) {
 	user := User{
 		Name:              "TestUser2",
 		Email:             "test2@example.com",
-		Password:          Encrypt("password123"),
+		Password:          TestEncrypt("password123"),
 		PreferedCategory1: "AI-theme",
 		PreferedCategory2: "Creativity",
 	}
 	err := user.Create()
 	if err != nil {
-		log.Fatal("Failed to create user:", err)
+		t.Fatalf("Failed to create user: %v", err)
 	}
-	fmt.Printf("User created successfully! ID: %d, UUID: %s\n", user.Id, user.Uuid)
+	t.Logf("User created successfully! ID: %d, UUID: %s", user.Id, user.Uuid)
 
 	retrievedUser, err := UserByEmail("test2@example.com")
 	if err != nil {
-		log.Fatal("Failed to retrieve user:", err)
+		t.Fatalf("Failed to retrieve user: %v", err)
 	}
-	fmt.Printf("User retrieved successfully! ID: %d, Name: %s, Email: %s, PrefCat1: %s, PrefCat2: %s\n",
+	t.Logf("User retrieved successfully! ID: %d, Name: %s, Email: %s, PrefCat1: %s, PrefCat2: %s",
 		retrievedUser.Id, retrievedUser.Name, retrievedUser.Email, retrievedUser.PreferedCategory1, retrievedUser.PreferedCategory2)
 
-	TestSortThreadsByLikes()
+	threads, err := testDm.GetAllThreadsByLikes()
+	if err != nil {
+		t.Fatalf("GetAllThreadsByLikes error: %v", err)
+	}
+	t.Logf("Found %d threads sorted by likes:", len(threads))
+	for i, thread := range threads {
+		t.Logf("%d. %s (Likes: %d)", i+1, thread.Topic, thread.LikesCount)
+	}
 }

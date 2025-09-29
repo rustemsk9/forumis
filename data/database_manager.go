@@ -18,6 +18,10 @@ func (dm *DatabaseManager) DoExec(query string, args ...interface{}) (sql.Result
 	return dm.db.Exec(query, args...)
 }
 
+func (dm *DatabaseManager) Ping() error {
+	return dm.db.Ping()
+}
+
 // NewDatabaseManager creates a new database manager
 func NewDatabaseManager(dbPath string) (*DatabaseManager, error) {
 	// Add connection string parameters to handle concurrent access better

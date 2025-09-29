@@ -21,6 +21,7 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
+	defer dbManager.Close()
 
 	// Check if user is authenticated
 	if !IsAuthenticated(request) {

@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"net/http"
 	"os"
+	"os/signal"
 	"strings"
 	"time"
 
@@ -149,4 +150,17 @@ func main() {
 
 	server.ListenAndServe()
 	fmt.Println("Server started : on 8080")
+
+	quit := make(chan os.Signal, 1)
+	signal.Notify(quit, os.Interrupt)
+	switch <-quit {
+	case os.Interrupt:
+		fmt.Println("Shutting down server...")
+		dbManager.Close()
+		err = dbManager.Ping()
+		if err != nil {
+			fmt.Println("Connection is closed:", err)
+		}
+	}
+	server.Close()
 }
