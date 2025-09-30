@@ -11,6 +11,10 @@ import (
 // GET /err?msg=
 // shows the error message page
 func Err(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != "GET" {
+		utils.MethodNotAllowed(writer, request, "GET method only")
+		return
+	}
 	vals := request.URL.Query()
 
 	// Use middleware to check authentication
@@ -22,6 +26,10 @@ func Err(writer http.ResponseWriter, request *http.Request) {
 }
 
 func Index(writer http.ResponseWriter, request *http.Request) {
+	if request.URL.Path != "/" {
+		utils.NotFound(writer, request)
+		return
+	}
 	var threads []data.Thread
 	var err error
 	category1, category2 := "", ""

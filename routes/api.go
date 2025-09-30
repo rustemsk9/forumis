@@ -25,6 +25,11 @@ type ThreadVoteStatus struct {
 
 // GET /api/thread/{id}/counts
 func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
+	if request.Method != "POST" {
+		utils.BadRequest(writer, request, "Method not allowed")
+		return
+	}
+
 	// Extract thread ID from URL path
 	var thread *data.Thread
 	path := request.URL.Path

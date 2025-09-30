@@ -39,7 +39,6 @@ func init() {
 		utils.Danger("Cannot get configuration from file", err)
 	}
 	fmt.Println("Initialized with configuration:\n", config)
-
 }
 
 func main() {
@@ -70,7 +69,7 @@ func main() {
 	baseChain := routes.Chain(
 		routes.WithErrorRecovery(),
 		routes.WithLogging(),
-		routes.WithDatabaseManager(dbManager),
+		routes.WithDatabaseManager(dbManager), // if we turn off this option, 500 error occurs in auth and login, since no dbmanager in context
 		routes.WithAuthentication(),
 	)
 
@@ -122,7 +121,6 @@ func main() {
 				utils.NotFound(w, r)
 			}
 		}
-
 	}))
 	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
 		path := r.URL.Path

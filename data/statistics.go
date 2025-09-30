@@ -12,8 +12,8 @@ func UserCount() (int, error) {
 	return statsDM.GetUserCount()
 }
 
-func MostThreeActiveUsers(limit int) (users []User, err error) {
-	return statsDM.GetMostActiveUsers(3) // Always return 3 as per function name
+func MostActiveUsers(limit int) (users []User, err error) {
+	return statsDM.GetMostActiveUsers(limit)
 }
 
 func TotalPostsCount() (int, error) {

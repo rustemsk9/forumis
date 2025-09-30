@@ -8,6 +8,7 @@ import (
 type DatabaseManager struct {
 	db *sql.DB
 }
+
 type User struct {
 	Id                int
 	Uuid              string
@@ -18,7 +19,6 @@ type User struct {
 	CreatedAt         time.Time
 	PreferedCategory1 string
 	PreferedCategory2 string
-	// LikedPosts []Likes
 }
 
 type LoginSkin struct {
@@ -40,21 +40,20 @@ type Session struct {
 }
 
 type Thread struct {
-	Id            int
-	Uuid          string
-	Topic         string
-	Body          string
-	UserId        int
-	User          string
-	Email         string
-	CreatedAt     time.Time
-	CreatedAtDate string
-	NumReplies    int
-	Len           int
-	//
+	Id               int
+	Uuid             string
+	Topic            string
+	Body             string
+	UserId           int
+	User             string
+	Email            string
+	CreatedAt        time.Time
+	CreatedAtDate    string
+	NumReplies       int
+	Len              int
 	Cards            []Post
 	LikedPosts       []Post
-	UserLikedThreads []Thread // Threads liked by the user
+	UserLikedThreads []Thread
 	LengthOfPosts    int
 	LikesCount       int
 	DislikesCount    int

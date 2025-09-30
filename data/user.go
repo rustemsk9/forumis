@@ -2,13 +2,12 @@ package data
 
 import (
 	"fmt"
-	"net/http"
 )
 
-// Global DatabaseManager instance for user operations
+// user DatabaseManager instance for user operations
 var userDM *DatabaseManager
 
-// InitUserDM initializes the global DatabaseManager for user operations
+// InitUserDM initializes the user DatabaseManager for user operations
 func InitUserDM(dm *DatabaseManager) {
 	userDM = dm
 }
@@ -65,21 +64,6 @@ func (user *User) Update() (err error) {
 // delete all users from database
 func (user *User) UserDeleteAll() (err error) {
 	return userDM.DeleteAllUsers()
-}
-
-func CurrentUser(request *http.Request) (name string, err error) {
-	// get from DB the user from the session
-	session, err := SessionCheck(nil, request)
-	if err != nil {
-		return
-	}
-	user, err := session.User()
-	if err != nil {
-		fmt.Println("Error session.User() in CurrentUser")
-		return
-	}
-	name = user.Name
-	return
 }
 
 // get all users in the database and returns it
