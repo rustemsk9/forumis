@@ -3,23 +3,30 @@
 ## How to run
 
 Starting options
-`sh
+
+```sh
     go run .
     OR
     go run . --migrate (to start empty database)
-    `
+```
+
 You can also build the project using:
 
-    ```sh
+```sh
     go build . && ./forum
-    ```
 
-BTW, if you want to run this project in Docker directly, you need to link this container with MySQL container, that is to
-say you have been pull MySQL image and run MySQL with docker before you run this.
+    OR
 
+    go build . && ./forum --migrate
 ```
-$ docker build -t forum .
-$ docker run --link mysql:mysql -p 8080:8080 forum
+
+## How to run in Docker
+
+    Starting options
+    We have special runserver.sh (in root folder)
+
+```sh
+    ./runserver.sh
 ```
 
 ## Architecture Overview
@@ -31,7 +38,7 @@ This is a Go-based forum application with a traditional web server architecture:
 - Session-based authentication using HTTP cookies (`_cookie`)
 - Like/dislike system for both threads and posts with separate tables
 
-## Key observed
+## SQL Key observed
 
 - SQL referenced ids will autoincrement, on created Thread user_id, and User id. (for example: user_id = 2, the empty user table will start from used_id in threads). Should be manipulated correctly.
 - On SQL access from app, and browsing data (not structures) will sometimes cause server to interrupts or delays. (This can be the main reason db-shm and db-wal is created OR modern sqlite3 every access case scenario)
@@ -41,17 +48,23 @@ This is a Go-based forum application with a traditional web server architecture:
   Example: Automatically update a `last_modified` timestamp on a `posts` table whenever a post is updated.
 
 ```sql
-CREATE TRIGGER update_post_timestamp
-AFTER UPDATE ON posts
-FOR EACH ROW
-BEGIN
-    UPDATE posts SET last_modified = CURRENT_TIMESTAMP WHERE id = NEW.id;
-END;
+    CREATE TRIGGER update_post_timestamp
+    AFTER UPDATE ON posts
+    FOR EACH ROW
+    BEGIN
+        UPDATE posts SET last_modified = CURRENT_TIMESTAMP WHERE id = NEW.id;
+    END;
 ```
 
     This trigger runs after any update to the `posts` table and sets the `last_modified` column to the current timestamp for the affected row.
 
--
+## Golang backedn key observed
+
+- We are not allowed to use any frameworks, neither backend nor front-end, which means:
+  a. cmd/main.go for will not consist of any database operations, unless .NewDatabaseManager called. Which will start daemon entity within entity folder, either /routes or /utils or any other folder will not have access to the database operations, which increases entity security.
+  b. Init works once at the start, and will not affect server configuration, database management.
+  c. Database Inits only data folder, for each .go file in it, with special function called "InitAllDatabaseManagers".
+  d. Bootstrap was removed due to its style components for likely considered front-ent framework, which enhances overall view, so layout.css controls all styles within our application.
 
 ### Database Operations
 

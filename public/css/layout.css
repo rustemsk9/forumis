@@ -240,7 +240,7 @@ kbd kbd {
   position: relative;
   display: flex;
   flex-direction: column;
-  min-width: 0;
+  min-width: 50px;
   word-wrap: break-word;
   background-color: #fff;
   background-clip: border-box;
@@ -717,7 +717,7 @@ video {
   justify-content: center;
   text-align: center;
   padding: 1.5rem;
-  min-height: 120px;
+  min-height: 100px;
 }
 
 .card-body .lead {

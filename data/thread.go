@@ -14,6 +14,33 @@ func InitThreadDM(dm *DatabaseManager) {
 	threadDM = dm
 }
 
+func (thread *Thread) GetAllThreads() (threads []Thread, err error) {
+	threads, err = threadDM.GetAllThreads()
+	if err != nil {
+		fmt.Println("Error on select GetAllThreads")
+		return
+	}
+	return
+}
+
+func (thread *Thread) FilterThreadsByCategories(category1, category2 string) ([]Thread, error) {
+	// We need to add this method to DatabaseManager
+	return threadDM.GetThreadsByCategories(category1, category2)
+}
+
+// Additional functions needed by API routes
+func (thread *Thread) ThreadById(threadID int) (Thread, error) {
+	return threadDM.GetThreadByID(threadID)
+}
+
+func (thread *Thread) GetThreadLikesCount(threadID int) (int, error) {
+	return threadDM.GetThreadLikesCount(threadID)
+}
+
+func (thread *Thread) GetThreadDislikesCount(threadID int) (int, error) {
+	return threadDM.GetThreadDislikesCount(threadID)
+}
+
 func SortThreadsByLikesDesc(threads []Thread) ([]Thread, error) {
 	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
 	n := len(threads)

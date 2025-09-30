@@ -22,18 +22,14 @@ func Err(writer http.ResponseWriter, request *http.Request) {
 }
 
 func Index(writer http.ResponseWriter, request *http.Request) {
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
-		return
-	}
-
 	var threads []data.Thread
 	var err error
 	category1, category2 := "", ""
 	sortBy := ""
 	reset := "false"
 	catbool := false
+	var user *data.User
+	var thread data.Thread
 	// Check if this is a POST request with filter parameters
 	if request.Method == "POST" {
 		fmt.Println("POST request received for filtering/sorting")
@@ -45,9 +41,9 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 
 			// Save user preferences if user is authenticated
 			if IsAuthenticated(request) {
-				user := GetCurrentUser(request)
+				user = GetCurrentUser(request)
 				if user != nil {
-					err := dbManager.UpdateUserPreferences(user.Id, category1, category2)
+					err := user.UpdateUserPreferences(user.Id, category1, category2)
 					if err != nil {
 						fmt.Printf("Error updating user preferences: %v\n", err)
 					}
@@ -57,12 +53,12 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			// Handle sorting and filtering
 			if category1 != "" || category2 != "" {
 				fmt.Println("Filtering by categories:", category1, category2)
-				threads, err = data.FilterThreadsByCategories(category1, category2)
+				threads, err = thread.FilterThreadsByCategories(category1, category2)
 				catbool = true
 
 			} else {
 				fmt.Println("No filters applied, showing all threads")
-				threads, err = dbManager.GetAllThreads()
+				threads, err = thread.GetAllThreads()
 				catbool = false
 			}
 
@@ -85,18 +81,17 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		// Load user preferred categories for authenticated users
 		userIdFind := -1
 		if IsAuthenticated(request) {
-			user := GetCurrentUser(request)
+			user = GetCurrentUser(request)
 			if user != nil {
 				userIdFind = user.Id
 				// Get fresh user data to ensure we have preferred categories
-				fullUser, userErr := dbManager.GetUserByID(user.Id)
-				if userErr == nil {
-					category1 = fullUser.PreferedCategory1
-					category2 = fullUser.PreferedCategory2
-					if category1 != "" || category2 != "" {
-						catbool = true
-					}
+				fullUser := user.GetUserById(user.Id)
+				category1 = fullUser.PreferedCategory1
+				category2 = fullUser.PreferedCategory2
+				if category1 != "" || category2 != "" {
+					catbool = true
 				}
+
 			}
 		}
 
@@ -110,13 +105,13 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		if reset == "true" {
-			threads, err = dbManager.GetAllThreads()
+			threads, err = thread.GetAllThreads()
 			catbool = true
 			category1, category2 = "", ""
 			sortBy = ""
 
 			if userIdFind != -1 {
-				err := dbManager.UpdateUserPreferences(userIdFind, category1, category2)
+				err := user.UpdateUserPreferences(userIdFind, category1, category2)
 				if err != nil {
 					fmt.Printf("Error updating user preferences: %v\n", err)
 				}
@@ -124,11 +119,11 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		} else {
 
 			if category1 != "" || category2 != "" {
-				threads, _ = data.FilterThreadsByCategories(category1, category2)
+				threads, _ = thread.FilterThreadsByCategories(category1, category2)
 				catbool = true
 			} else {
 				fmt.Println("No filters applied, showing all threads GET")
-				threads, err = dbManager.GetAllThreads()
+				threads, err = thread.GetAllThreads()
 				catbool = false
 			}
 
@@ -149,14 +144,14 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 
 	if err == nil {
 		// Get current user from middleware
-		user := GetCurrentUser(request)
+		user = GetCurrentUser(request)
 		userName := ""
 		if user != nil {
 			userName = user.Name
 			// Populate user-specific vote information for each thread
 			for i := range threads {
-				threads[i].UserLiked = dbManager.HasThreadLiked(user.Id, threads[i].Id)
-				threads[i].UserDisliked = dbManager.HasThreadDisliked(user.Id, threads[i].Id)
+				threads[i].UserLiked = user.HasThreadLiked(user.Id, threads[i].Id)
+				threads[i].UserDisliked = user.HasThreadDisliked(user.Id, threads[i].Id)
 			}
 		}
 
@@ -185,7 +180,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 				return count
 			}(),
 			Online: func() int {
-				online, err := dbManager.CheckOnlineUsers(10)
+				online, err := data.CheckOnlineUsers(10)
 				if err != nil {
 					return 0
 				}

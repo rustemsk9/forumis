@@ -7,6 +7,7 @@ import (
 	"strconv"
 	"strings"
 
+	"forum/data"
 	"forum/utils"
 )
 
@@ -24,13 +25,14 @@ type ThreadVoteStatus struct {
 
 // GET /api/thread/{id}/counts
 func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database not available"))
-		return
-	}
+	// dbManager := GetDatabaseManager(request)
+	// if dbManager == nil {
+	// 	utils.InternalServerError(writer, request, fmt.Errorf("database not available"))
+	// 	return
+	// }
 
 	// Extract thread ID from URL path
+	var thread *data.Thread
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
@@ -46,13 +48,13 @@ func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get likes and dislikes count using DatabaseManager
-	likesCount, err := dbManager.GetThreadLikesCount(threadId)
+	likesCount, err := thread.GetThreadLikesCount(threadId)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return
 	}
 
-	dislikesCount, err := dbManager.GetThreadDislikesCount(threadId)
+	dislikesCount, err := thread.GetThreadDislikesCount(threadId)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return

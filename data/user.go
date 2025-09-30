@@ -25,24 +25,12 @@ func (user *User) CreatePost(conv Thread, body string, alsoid int) (soid int64, 
 	return
 }
 
-func LikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+func (user *User) LikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
 	return userDM.CreateThreadLikeOnCreation(alsoid, alsoid2)
 }
 
-func DislikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+func (user *User) DislikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
 	return userDM.CreateThreadDislikeOnCreation(alsoid, alsoid2)
-}
-
-// when post created , creates instance of like and dislike
-// but creator of this post cannot like or dislike it
-func LikeOnPostCreation(alsoid, alsoid2 int) (err error) {
-	return userDM.CreatePostLikeOnCreation(alsoid, alsoid2)
-}
-
-// when post created , creates instance of like and dislike
-// but creator of this post cannot like or dislike it
-func DislikeOnPostCreation(alsoid, alsoid2 int) (err error) {
-	return userDM.CreatePostDislikeOnCreation(alsoid, alsoid2)
 }
 
 // create a new session for an existing user
@@ -75,6 +63,14 @@ func (user *User) Delete() (err error) {
 	return userDM.DeleteUserByID(user.Id)
 }
 
+func (user *User) UpdateUserPreferences(userID int, category1, category2 string) (err error) {
+	err = userDM.UpdateUserPreferences(userID, category1, category2)
+	if err != nil {
+		fmt.Println("Error updating user preferences in UpdateUserPreferences method")
+	}
+	return
+}
+
 // update user information in the database
 func (user *User) Update() (err error) {
 	_, err = userDM.db.Exec("UPDATE users SET name=?, email=? WHERE id=?", user.Name, user.Email, user.Id)
@@ -82,7 +78,7 @@ func (user *User) Update() (err error) {
 }
 
 // delete all users from database
-func UserDeleteAll() (err error) {
+func (user *User) UserDeleteAll() (err error) {
 	return userDM.DeleteAllUsers()
 }
 
@@ -192,12 +188,12 @@ func IfUserExist(email, name string) bool {
 }
 
 // Additional functions needed by routes/account.go
-func GetUserById(userID int) User {
-	user, err := userDM.GetUserByID(userID)
+func (user *User) GetUserById(userID int) User {
+	guser, err := userDM.GetUserByID(userID)
 	if err != nil {
 		return User{}
 	}
-	return user
+	return guser
 }
 
 func GetUserPosts(userID int) ([]Post, error) {
@@ -241,12 +237,11 @@ func GetLikesPostsFromDB(likes []Likes) ([]Post, error) {
 	return posts, nil
 }
 
-// Additional functions needed by API routes
-func ThreadById(threadID int) (Thread, error) {
-	return userDM.GetThreadByID(threadID)
+// HasThreadLiked(user.Id, threads[i].Id)
+func (user *User) HasThreadLiked(userId int, threadId int) bool {
+	return userDM.HasThreadLiked(userId, threadId)
 }
 
-func FilterThreadsByCategories(category1, category2 string) ([]Thread, error) {
-	// We need to add this method to DatabaseManager
-	return userDM.GetThreadsByCategories(category1, category2)
+func (user *User) HasThreadDisliked(userId int, threadId int) bool {
+	return userDM.HasThreadDisliked(userId, threadId)
 }
