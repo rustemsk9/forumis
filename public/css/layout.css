@@ -316,6 +316,18 @@ kbd kbd {
   border-color: #17a2b8;
 }
 
+.btn-outline-secondary {
+  color: #007bff;
+  font-weight: 600;
+  background-color: #000000;
+  border-radius: 0 0 30px 30px;
+  transition: color 0.15s ease-in-out;
+}
+
+.btn-outline-secondary:hover {
+  color: #ffffff;
+}
+
 .btn-outline-success {
   color: #28a745;
   background-color: transparent;

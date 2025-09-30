@@ -41,6 +41,76 @@ func (thread *Thread) GetThreadDislikesCount(threadID int) (int, error) {
 	return threadDM.GetThreadDislikesCount(threadID)
 }
 
+func ReadDMFromAccount(URLIDConv int) ([]Thread, error) {
+	// Get user info first
+	userInfo, err := threadDM.GetUserByID(URLIDConv)
+	if err != nil {
+		return []Thread{}, err
+	}
+
+	// Get user's threads
+	userThreads, err := threadDM.GetThreadsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user threads: %v\n", err)
+		userThreads = []Thread{} // Empty slice if error
+	}
+
+	// Get user's posts
+	userPosts, err := threadDM.GetPostsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user posts: %v\n", err)
+		userPosts = []Post{} // Empty slice if error
+	}
+
+	// Get user's liked posts
+	likedPosts, err := threadDM.GetLikedPostsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user liked posts: %v\n", err)
+		likedPosts = []Post{} // Empty slice if error
+	}
+
+	// Get user's liked threads
+	likedThreads, err := threadDM.GetLikedThreadsByUserID(URLIDConv)
+	if err != nil {
+		fmt.Printf("Error getting user liked threads: %v\n", err)
+		likedThreads = []Thread{} // Empty slice if error
+	}
+
+	// Create account data structure that matches the template expectations
+	// The template expects an array where the first element has user info and contains Cards/LikedPosts
+	var templateData []Thread
+
+	// Always create at least one element for the template
+	var firstElement Thread
+
+	if len(userThreads) > 0 {
+		// Use the first thread as a base
+		firstElement = userThreads[0]
+
+		// Add the rest of the threads if any
+		if len(userThreads) > 1 {
+			templateData = append(templateData, userThreads[1:]...)
+		}
+	} else {
+		// No threads, create a dummy thread with user info
+		firstElement = Thread{
+			User:      userInfo.Name,
+			Email:     userInfo.Email,
+			CreatedAt: userInfo.CreatedAt,
+		}
+	}
+
+	// Set the Cards and LikedPosts on the first element
+	firstElement.Cards = userPosts
+	firstElement.LikedPosts = likedPosts
+	firstElement.UserLikedThreads = likedThreads
+
+	// Insert the first element at the beginning
+	templateData = append([]Thread{firstElement}, templateData...)
+
+	return templateData, nil
+}
+
 func SortThreadsByLikesDesc(threads []Thread) ([]Thread, error) {
 	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
 	n := len(threads)
@@ -66,6 +136,7 @@ func SortThreadsByLatest(threads []Thread) ([]Thread, error) {
 	}
 	return threads, nil
 }
+
 func GetCookieValue(request *http.Request) int {
 	// Debug: Print all cookies
 	fmt.Printf("DEBUG: All cookies for request: ")
@@ -103,29 +174,10 @@ func GetCookieValue(request *http.Request) int {
 	return session.UserId
 }
 
-func GetThreadLikes(findid int) (THLI []ThreadLikes) {
-	likes, err := threadDM.GetThreadLikes(findid)
-	if err != nil {
-		fmt.Println("Error on select GetThreadLikes")
-		return
-	}
-	return likes
-}
-
-func GetThreadDislikes(findid int) (THDI []ThreadDislikes) {
-	dislikes, err := threadDM.GetThreadDislikes(findid)
-	if err != nil {
-		fmt.Println("Error on select GetThreadDislikes")
-		return
-	}
-	return dislikes
-}
-
 func ApplyThreadLike(stateLike string, userID int, threadId int) {
 	fmt.Println("Apply thread likes in database proccess")
 	threadDM.AddThreadLike(userID, threadId)
 	// can apply only if threadId is right // TODO check sequence
-
 }
 
 func ApplyThreadDislike(stateLike string, userID int, threadId int) {
@@ -196,23 +248,6 @@ func SmartApplyThreadDislike(userID int, threadID int) error {
 	return nil
 }
 
-// }
-func GetLikes(postID int) (Li []Likes) {
-	Li, err := threadDM.GetLikes(postID)
-	if err != nil {
-		return
-	}
-	return Li
-}
-
-func GetDislikes(postID int) (Di []Dislikes) {
-	Di, err := threadDM.GetDislikes(postID)
-	if err != nil {
-		return
-	}
-	return Di
-}
-
 // Thread methods needed by API routes
 func (thread *Thread) GetLikesCount() int {
 	likes, err := threadDM.GetThreadLikes(thread.Id)
@@ -228,17 +263,4 @@ func (thread *Thread) GetDislikesCount() int {
 		return 0
 	}
 	return len(dislikes)
-}
-
-func ApplyLikes(stateLike string, userID int, postID int) {
-	fmt.Println("---------------------")
-	fmt.Println("in database proccess")
-	threadDM.ApplyLikes(userID, postID)
-}
-
-func ApplyDislikes(stateLike string, userID int, postID int) {
-	fmt.Println("---------------------")
-	fmt.Println("in database proccess")
-	threadDM.ApplyDislikes(userID, postID)
-
 }

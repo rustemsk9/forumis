@@ -1,9 +1,9 @@
 package test
 
 import (
-	"forum/data"
-
 	"testing"
+
+	"forum/data"
 )
 
 func TestDeleteUserByName(t *testing.T) {

@@ -1,6 +1,6 @@
 package data
 
-// Global DatabaseManager instance for statistics operations
+// statistics DatabaseManager instance for statistics operations
 var statsDM *DatabaseManager
 
 // InitStatsDM initializes the global DatabaseManager for statistics operations

@@ -31,7 +31,8 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 	var user *data.User
 	var thread data.Thread
 	// Check if this is a POST request with filter parameters
-	if request.Method == "POST" {
+	switch request.Method {
+	case "POST":
 		fmt.Println("POST request received for filtering/sorting")
 		err = request.ParseForm()
 		if err == nil {
@@ -75,7 +76,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			}
 
 		}
-	} else if request.Method == "GET" {
+	case "GET":
 		// GET request - check for sort parameter in URL
 
 		// Load user preferred categories for authenticated users
@@ -137,7 +138,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 				return
 			}
 		}
-	} else {
+	default:
 		utils.BadRequest(writer, request, "Unsupported request method")
 		return
 	}

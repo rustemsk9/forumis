@@ -8,7 +8,7 @@ import (
 	"time"
 )
 
-// Global DatabaseManager instance for session operations
+// session DatabaseManager instance for session operations
 var sessionDM *DatabaseManager
 
 // InitSessionDM initializes the global DatabaseManager for session operations

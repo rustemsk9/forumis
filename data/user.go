@@ -38,21 +38,6 @@ func (user *User) CreateSession() (session Session, err error) {
 	return userDM.CreateSession(user)
 }
 
-// get the session for an existing user
-func (user *User) Session() (session Session, err error) {
-	// This is a basic implementation - you may need to adjust based on how sessions are retrieved by user ID
-	rows, err := userDM.db.Query("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE user_id=?", user.Id)
-	if err != nil {
-		return
-	}
-	defer rows.Close()
-
-	if rows.Next() {
-		err = rows.Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
-	}
-	return
-}
-
 // create a new user, save user info into the database
 func (user *User) Create() (err error) {
 	return userDM.CreateUser(user)
