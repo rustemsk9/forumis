@@ -4,7 +4,8 @@ import (
 	"fmt"
 	"net/http"
 
-	"forum/data"
+	"forum/internal"
+	"forum/models"
 	"forum/utils"
 )
 
@@ -30,14 +31,13 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		utils.NotFound(writer, request)
 		return
 	}
-	var threads []data.Thread
+	var threads []models.Thread
 	var err error
 	category1, category2 := "", ""
 	sortBy := ""
 	reset := "false"
 	catbool := false
-	var user *data.User
-	var thread data.Thread
+	var user *models.User
 	// Check if this is a POST request with filter parameters
 	switch request.Method {
 	case "POST":
@@ -52,7 +52,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			if IsAuthenticated(request) {
 				user = GetCurrentUser(request)
 				if user != nil {
-					err := user.UpdateUserPreferences(user.Id, category1, category2)
+					err := internal.UpdateUserPreferences(user.Id, category1, category2)
 					if err != nil {
 						fmt.Printf("Error updating user preferences: %v\n", err)
 					}
@@ -62,27 +62,26 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			// Handle sorting and filtering
 			if category1 != "" || category2 != "" {
 				fmt.Println("Filtering by categories:", category1, category2)
-				threads, err = thread.FilterThreadsByCategories(category1, category2)
+				threads, err = internal.FilterThreadsByCategories(category1, category2)
 				catbool = true
 
 			} else {
 				fmt.Println("No filters applied, showing all threads")
-				threads, err = thread.GetAllThreads()
+				threads, err = internal.GetAllThreads()
 				catbool = false
 			}
 
 			if sortBy == "most_liked" {
 				fmt.Println("Sorting by most liked")
-				threads, err = data.SortThreadsByLikesDesc(threads)
+				threads, err = internal.SortThreadsByLikesDesc(threads)
 			} else if sortBy == "latest" {
-				threads, err = data.SortThreadsByLatest(threads)
+				threads, err = internal.SortThreadsByLatest(threads)
 			}
 			if err != nil {
 				fmt.Println("Error retrieving threads:", err)
 				utils.ErrorMessage(writer, request, "Error retrieving threads")
 				return
 			}
-
 		}
 	case "GET":
 		// GET request - check for sort parameter in URL
@@ -94,7 +93,7 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			if user != nil {
 				userIdFind = user.Id
 				// Get fresh user data to ensure we have preferred categories
-				fullUser := user.GetUserById(user.Id)
+				fullUser := internal.GetUserById(user.Id)
 				category1 = fullUser.PreferedCategory1
 				category2 = fullUser.PreferedCategory2
 				if category1 != "" || category2 != "" {
@@ -114,13 +113,13 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		}
 
 		if reset == "true" {
-			threads, err = thread.GetAllThreads()
+			threads, err = internal.GetAllThreads()
 			catbool = true
 			category1, category2 = "", ""
 			sortBy = ""
 
 			if userIdFind != -1 {
-				err := user.UpdateUserPreferences(userIdFind, category1, category2)
+				err := internal.UpdateUserPreferences(userIdFind, category1, category2)
 				if err != nil {
 					fmt.Printf("Error updating user preferences: %v\n", err)
 				}
@@ -128,18 +127,18 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 		} else {
 
 			if category1 != "" || category2 != "" {
-				threads, _ = thread.FilterThreadsByCategories(category1, category2)
+				threads, _ = internal.FilterThreadsByCategories(category1, category2)
 				catbool = true
 			} else {
 				fmt.Println("No filters applied, showing all threads GET")
-				threads, err = thread.GetAllThreads()
+				threads, err = internal.GetAllThreads()
 				catbool = false
 			}
 
 			if sortBy == "most_liked" {
-				threads, err = data.SortThreadsByLikesDesc(threads)
+				threads, err = internal.SortThreadsByLikesDesc(threads)
 			} else if sortBy == "latest" {
-				threads, err = data.SortThreadsByLatest(threads)
+				threads, err = internal.SortThreadsByLatest(threads)
 			}
 			if err != nil {
 				utils.InternalServerError(writer, request, err)
@@ -159,14 +158,14 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			userName = user.Name
 			// Populate user-specific vote information for each thread
 			for i := range threads {
-				threads[i].UserLiked = user.HasThreadLiked(user.Id, threads[i].Id)
-				threads[i].UserDisliked = user.HasThreadDisliked(user.Id, threads[i].Id)
+				threads[i].UserLiked = internal.HasThreadLiked(user.Id, threads[i].Id)
+				threads[i].UserDisliked = internal.HasThreadDisliked(user.Id, threads[i].Id)
 			}
 		}
 
 		// Create expanded data structure
 		pageData := struct {
-			Threads           []data.Thread
+			Threads           []models.Thread
 			Title             string
 			Message           string
 			User              string
@@ -182,14 +181,14 @@ func Index(writer http.ResponseWriter, request *http.Request) {
 			User:    userName,
 			SortBy:  sortBy,
 			Count: func() int {
-				count, err := data.UserCount()
+				count, err := internal.UserCount()
 				if err != nil {
 					return 0
 				}
 				return count
 			}(),
 			Online: func() int {
-				online, err := data.CheckOnlineUsers(10)
+				online, err := internal.CheckOnlineUsers(10)
 				if err != nil {
 					return 0
 				}

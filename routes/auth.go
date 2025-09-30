@@ -5,18 +5,18 @@ import (
 	"net/http"
 	"time"
 
+	"forum/internal"
+	"forum/models"
 	"forum/utils"
-
-	"forum/data"
 )
 
 // GET /login
 // show the login page
 var Error string
 
-func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin) {
+func Login(writer http.ResponseWriter, request *http.Request, LS models.LoginSkin) {
 	if request.URL.Path == "/login/success" {
-		LS = data.LoginSkin{
+		LS = models.LoginSkin{
 			Submit: "Submit",
 			Signup: "Signup",
 			Name:   LS.Name,
@@ -28,7 +28,7 @@ func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin)
 		return
 	} else {
 		if Error != "" {
-			LS = data.LoginSkin{
+			LS = models.LoginSkin{
 				Submit: "Again",
 				Signup: "Signup",
 				Name:   LS.Name,
@@ -36,7 +36,7 @@ func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin)
 				Error:  Error,
 			}
 		} else {
-			LS = data.LoginSkin{
+			LS = models.LoginSkin{
 				Submit: "Submit",
 				Signup: "Signup",
 				Name:   LS.Name,
@@ -52,14 +52,14 @@ func Login(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin)
 
 // GET /signup
 // show the signup page
-func Signup(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin) {
+func Signup(writer http.ResponseWriter, request *http.Request, LS models.LoginSkin) {
 	if request.Method != "GET" {
 		utils.MethodNotAllowed(writer, request, "GET method only")
 		return
 	}
 	// var LS LoginSkin
 	if Error != "" {
-		LS = data.LoginSkin{
+		LS = models.LoginSkin{
 			Submit: "Submit",
 			Signup: "Again",
 			Name:   LS.Name,
@@ -67,7 +67,7 @@ func Signup(writer http.ResponseWriter, request *http.Request, LS data.LoginSkin
 			Error:  Error,
 		}
 	} else {
-		LS = data.LoginSkin{
+		LS = models.LoginSkin{
 			Submit: "Submit",
 			Signup: "Signup",
 			Name:   LS.Name,
@@ -100,10 +100,10 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Check if user already exists
-	checkExists := data.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
+	checkExists := internal.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
 	if checkExists {
 		Error = "This name/email already exists\nTry to signup again using different username/email"
-		user := data.LoginSkin{
+		user := models.LoginSkin{
 			Submit: "Try Again",
 			Signup: "Signup",
 			Name:   request.PostFormValue("name"),
@@ -116,7 +116,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 
 	if ok := utils.PasswordMeetsCriteria(writer, request, request.PostFormValue("password")); !ok {
 		Error = "Password must contain uppercase, lowercase, number, and symbol"
-		user := data.LoginSkin{
+		user := models.LoginSkin{
 			Submit: "Try Again",
 			Signup: "Signup",
 			Name:   request.PostFormValue("name"),
@@ -127,7 +127,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	usertoSign := data.User{
+	usertoSign := models.User{
 		Name:     request.PostFormValue("name"),
 		Email:    request.PostFormValue("email"),
 		Password: request.PostFormValue("password"),
@@ -174,13 +174,13 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	user, err := dbManager.GetUserByEmail(email)
 	if err != nil {
 		Error = "You might entered wrong email/password \n Try again"
-		Login(writer, request, data.LoginSkin{})
+		Login(writer, request, models.LoginSkin{})
 		return
 	}
 
 	fmt.Printf("Found user: %s (ID: %d)\n", user.Name, user.Id)
 
-	if data.CheckPassword(user.Password, password) {
+	if utils.CheckPassword(user.Password, password) {
 		fmt.Println("Password correct, checking existing session...")
 
 		// Check if user already has a session from middleware
@@ -217,7 +217,7 @@ func Authenticate(writer http.ResponseWriter, request *http.Request) {
 	} else {
 		fmt.Printf("Password incorrect for user: %s\n", user.Name)
 		Error = "You might entered wrong email/password \n Try again"
-		Login(writer, request, data.LoginSkin{})
+		Login(writer, request, models.LoginSkin{})
 	}
 }
 
@@ -232,10 +232,10 @@ func Logout(writer http.ResponseWriter, request *http.Request) {
 
 	if err != http.ErrNoCookie && cookie != nil {
 		// Find session by cookie value
-		session, err := data.GetSessionByCookie(cookie.Value)
+		session, err := internal.GetSessionByCookie(cookie.Value)
 		if err == nil {
 			// Delete the session
-			session.DeleteByUUID()
+			internal.DeleteByUUID(session.Uuid)
 		}
 
 		// Invalidate the cookie

@@ -1,53 +1,55 @@
-package data
+package internal
 
 import (
 	"fmt"
+	"forum/internal/data"
+	"forum/models"
 )
 
 // user DatabaseManager instance for user operations
-var userDM *DatabaseManager
+var userDM *data.DatabaseManager
 
 // InitUserDM initializes the user DatabaseManager for user operations
-func InitUserDM(dm *DatabaseManager) {
+func InitUserDM(dm *data.DatabaseManager) {
 	userDM = dm
 }
 
 // create a new thread
-func (user *User) CreateThread(topic string, body string, alsoid int, category1 string, category2 string) (soid int64, conv Thread, err error) {
+func CreateThread(topic string, body string, alsoid int, category1 string, category2 string) (soid int64, conv models.Thread, err error) {
 	soid, err = userDM.CreateThreadByUser(topic, body, alsoid, category1, category2)
 	return
 }
 
 // create a new post to a thread
-func (user *User) CreatePost(conv Thread, body string, alsoid int) (soid int64, err error) { // (post Post, err error) {
+func CreatePost(conv models.Thread, body string, alsoid int) (soid int64, err error) { // (post Post, err error) {
 	soid, err = userDM.CreatePostByUser(body, alsoid, conv.Id)
 	return
 }
 
-func (user *User) LikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+func LikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
 	return userDM.CreateThreadLikeOnCreation(alsoid, alsoid2)
 }
 
-func (user *User) DislikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
+func DislikeOnThreadCreation(alsoid, alsoid2 int) (err error) {
 	return userDM.CreateThreadDislikeOnCreation(alsoid, alsoid2)
 }
 
 // create a new session for an existing user
-func (user *User) CreateSession() (session Session, err error) {
-	return userDM.CreateSession(user)
+func CreateSession(user models.User) (session models.Session, err error) {
+	return userDM.CreateSession(&user)
 }
 
 // create a new user, save user info into the database
-func (user *User) Create() (err error) {
-	return userDM.CreateUser(user)
+func Create(user models.User) (err error) {
+	return userDM.CreateUser(&user)
 }
 
 // delete user from database
-func (user *User) Delete() (err error) {
+func Delete(user models.User) (err error) {
 	return userDM.DeleteUserByID(user.Id)
 }
 
-func (user *User) UpdateUserPreferences(userID int, category1, category2 string) (err error) {
+func UpdateUserPreferences(userID int, category1, category2 string) (err error) {
 	err = userDM.UpdateUserPreferences(userID, category1, category2)
 	if err != nil {
 		fmt.Println("Error updating user preferences in UpdateUserPreferences method")
@@ -56,18 +58,18 @@ func (user *User) UpdateUserPreferences(userID int, category1, category2 string)
 }
 
 // update user information in the database
-func (user *User) Update() (err error) {
-	_, err = userDM.db.Exec("UPDATE users SET name=?, email=? WHERE id=?", user.Name, user.Email, user.Id)
+func Update(user models.User) (err error) {
+	_, err = userDM.DoExec("UPDATE users SET name=?, email=? WHERE id=?", user.Name, user.Email, user.Id)
 	return
 }
 
 // delete all users from database
-func (user *User) UserDeleteAll() (err error) {
+func UserDeleteAll() (err error) {
 	return userDM.DeleteAllUsers()
 }
 
 // get all users in the database and returns it
-func Users() (users []User, err error) {
+func Users() (users []models.User, err error) {
 	return userDM.GetAllUsers()
 }
 
@@ -134,12 +136,12 @@ func PrepareDislikedPosts(userID, postID int) bool {
 }
 
 // get a single user given the email
-func UserByEmail(email string) (user User, err error) {
+func UserByEmail(email string) (user models.User, err error) {
 	return userDM.GetUserByEmailDetailed(email)
 }
 
 // get a single user given the UUID
-func UserByUUID(uuid string) (user User, err error) {
+func UserByUUID(uuid string) (user models.User, err error) {
 	return userDM.GetUserByUUID(uuid)
 }
 
@@ -157,33 +159,33 @@ func IfUserExist(email, name string) bool {
 }
 
 // Additional functions needed by routes/account.go
-func (user *User) GetUserById(userID int) User {
+func GetUserById(userID int) models.User {
 	guser, err := userDM.GetUserByID(userID)
 	if err != nil {
-		return User{}
+		return models.User{}
 	}
 	return guser
 }
 
-func GetUserPosts(userID int) ([]Post, error) {
+func GetUserPosts(userID int) ([]models.Post, error) {
 	// This function should get all posts created by a specific user
 	// We need to add this method to DatabaseManager
 	return userDM.GetUserCreatedPosts(userID)
 }
 
-func GetUserLikedPosts(userID int) ([]Likes, error) {
+func GetUserLikedPosts(userID int) ([]models.Likes, error) {
 	return userDM.GetUserLikedPosts(userID)
 }
 
-func AccountThreads(userID int) ([]Thread, error) {
+func AccountThreads(userID int) ([]models.Thread, error) {
 	// This function should get all threads created by a specific user
 	// We need to add this method to DatabaseManager
 	return userDM.GetUserCreatedThreads(userID)
 }
 
-func GetLikesPostsFromDB(likes []Likes) ([]Post, error) {
+func GetLikesPostsFromDB(likes []models.Likes) ([]models.Post, error) {
 	// This function should get full post objects from the likes
-	var posts []Post
+	var posts []models.Post
 	for _, like := range likes {
 		post, err := userDM.GetPostByID(like.PostId)
 		if err != nil {
@@ -207,10 +209,10 @@ func GetLikesPostsFromDB(likes []Likes) ([]Post, error) {
 }
 
 // HasThreadLiked(user.Id, threads[i].Id)
-func (user *User) HasThreadLiked(userId int, threadId int) bool {
+func HasThreadLiked(userId int, threadId int) bool {
 	return userDM.HasThreadLiked(userId, threadId)
 }
 
-func (user *User) HasThreadDisliked(userId int, threadId int) bool {
+func HasThreadDisliked(userId int, threadId int) bool {
 	return userDM.HasThreadDisliked(userId, threadId)
 }

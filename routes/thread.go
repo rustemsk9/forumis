@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"forum/data"
+	"forum/models"
 	"forum/utils"
 )
 
@@ -100,7 +100,7 @@ func ReadThread(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	thread := data.Thread{}
+	thread := models.Thread{}
 	var err error
 	id := request.URL.Query().Get("id")
 

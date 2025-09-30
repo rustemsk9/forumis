@@ -2,12 +2,14 @@ package data
 
 import (
 	"fmt"
+	"forum/models"
+	"forum/utils"
 	"time"
 )
 
 // User operations
-func (dm *DatabaseManager) CreateUser(user *User) error {
-	user.Uuid = createUUID()
+func (dm *DatabaseManager) CreateUser(user *models.User) error {
+	user.Uuid = utils.CreateUUID()
 	user.CreatedAt = time.Now()
 
 	stmt, err := dm.db.Prepare(
@@ -17,7 +19,7 @@ func (dm *DatabaseManager) CreateUser(user *User) error {
 	}
 	defer stmt.Close()
 
-	result, err := stmt.Exec(user.Uuid, user.Name, user.Email, Encrypt(user.Password), user.CreatedAt)
+	result, err := stmt.Exec(user.Uuid, user.Name, user.Email, utils.Encrypt(user.Password), user.CreatedAt)
 	if err != nil {
 		return err
 	}
@@ -37,23 +39,21 @@ func (dm *DatabaseManager) CheckUserExists(email, name string) (bool, error) {
 	return count > 0, err
 }
 
-func (dm *DatabaseManager) GetUserByEmailDetailed(email string) (User, error) {
-	var user User
-	err := dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at FROM users WHERE email=?", email).
+func (dm *DatabaseManager) GetUserByEmailDetailed(email string) (user models.User, err error) {
+	err = dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at FROM users WHERE email=?", email).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt)
 	return user, err
 }
 
-func (dm *DatabaseManager) GetUserByID(id int) (User, error) {
-	var user User
-	err := dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE id=?", id).
+func (dm *DatabaseManager) GetUserByID(id int) (user models.User, err error) {
+
+	err = dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE id=?", id).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.PreferedCategory1, &user.PreferedCategory2)
 	return user, err
 }
 
-func (dm *DatabaseManager) GetUserByEmail(email string) (User, error) {
-	var user User
-	err := dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE email=?", email).
+func (dm *DatabaseManager) GetUserByEmail(email string) (user models.User, err error) {
+	err = dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE email=?", email).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.PreferedCategory1, &user.PreferedCategory2)
 	return user, err
 }
@@ -65,8 +65,8 @@ func (dm *DatabaseManager) UpdateUserPreferences(userID int, category1, category
 	return err
 }
 
-func (dm *DatabaseManager) CheckOnlineUsers(considerOnline int) ([]User, error) {
-	var users []User
+func (dm *DatabaseManager) CheckOnlineUsers(considerOnline int) ([]models.User, error) {
+	var users []models.User
 	now := time.Now()
 	currentTime := now.Hour()*100 + now.Minute()
 
@@ -83,7 +83,7 @@ func (dm *DatabaseManager) CheckOnlineUsers(considerOnline int) ([]User, error) 
 	defer rows.Close()
 
 	for rows.Next() {
-		var user User
+		var user models.User
 		var activeLast int
 
 		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt, &activeLast)
@@ -130,8 +130,8 @@ func (dm *DatabaseManager) HasUserDislikedThread(userID, threadID int) int {
 	return 0
 }
 
-func (dm *DatabaseManager) GetUserByUUID(uuid string) (User, error) {
-	var user User
+func (dm *DatabaseManager) GetUserByUUID(uuid string) (models.User, error) {
+	var user models.User
 	err := dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at FROM users WHERE uuid=?", uuid).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt)
 	return user, err
@@ -147,8 +147,8 @@ func (dm *DatabaseManager) DeleteAllUsers() error {
 	return err
 }
 
-func (dm *DatabaseManager) GetAllUsers() ([]User, error) {
-	var users []User
+func (dm *DatabaseManager) GetAllUsers() ([]models.User, error) {
+	var users []models.User
 	rows, err := dm.db.Query("SELECT id, uuid, name, email, password, created_at FROM users")
 	if err != nil {
 		return users, err
@@ -156,7 +156,7 @@ func (dm *DatabaseManager) GetAllUsers() ([]User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var user User
+		var user models.User
 		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt)
 		if err != nil {
 			continue
@@ -166,8 +166,8 @@ func (dm *DatabaseManager) GetAllUsers() ([]User, error) {
 	return users, nil
 }
 
-func (dm *DatabaseManager) GetUserLikedPosts(userID int) ([]Likes, error) {
-	var likes []Likes
+func (dm *DatabaseManager) GetUserLikedPosts(userID int) ([]models.Likes, error) {
+	var likes []models.Likes
 	rows, err := dm.db.Query("SELECT COALESCE(type, 'like') as type, user_id, post_id FROM likedposts WHERE user_id=?", userID)
 	if err != nil {
 		return likes, err
@@ -175,7 +175,7 @@ func (dm *DatabaseManager) GetUserLikedPosts(userID int) ([]Likes, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var like Likes
+		var like models.Likes
 		err = rows.Scan(&like.Type, &like.UserId, &like.PostId)
 		if err != nil {
 			fmt.Println("Error scanning like:", err)
@@ -186,8 +186,8 @@ func (dm *DatabaseManager) GetUserLikedPosts(userID int) ([]Likes, error) {
 	return likes, nil
 }
 
-func (dm *DatabaseManager) GetUserLikedThreads(userID int) ([]ThreadLikes, error) {
-	var likes []ThreadLikes
+func (dm *DatabaseManager) GetUserLikedThreads(userID int) ([]models.ThreadLikes, error) {
+	var likes []models.ThreadLikes
 	rows, err := dm.db.Query("SELECT type, user_id, thread_id FROM threadlikes WHERE user_id=?", userID)
 	if err != nil {
 		return likes, err
@@ -195,7 +195,7 @@ func (dm *DatabaseManager) GetUserLikedThreads(userID int) ([]ThreadLikes, error
 	defer rows.Close()
 
 	for rows.Next() {
-		var like ThreadLikes
+		var like models.ThreadLikes
 		err = rows.Scan(&like.Type, &like.UserId, &like.ThreadId)
 		if err != nil {
 			continue

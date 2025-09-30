@@ -2,17 +2,19 @@ package data
 
 import (
 	"fmt"
+	"forum/models"
+	"forum/utils"
 	"log"
 	"time"
 )
 
 // Session operations
-func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
+func (dm *DatabaseManager) CreateSession(user *models.User) (models.Session, error) {
 	// Delete existing sessions for this user
 	dm.db.Exec("DELETE from sessions where user_id=?", user.Id)
 
 	// Create the session UUID
-	sessionUUID := createUUID()
+	sessionUUID := utils.CreateUUID()
 
 	// Create cookie string value in format "userId&sessionUUID"
 	cookieString := fmt.Sprintf("%d&%s", user.Id, sessionUUID)
@@ -25,16 +27,16 @@ func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
 	stmt, err := dm.db.Prepare(
 		"INSERT INTO sessions(uuid, email, user_id, created_at, cookie_string, active_last) VALUES(?, ?, ?, ?, ?, ?)")
 	if err != nil {
-		return Session{}, err
+		return models.Session{}, err
 	}
 	defer stmt.Close()
 
 	_, err = stmt.Exec(sessionUUID, user.Email, user.Id, time.Now(), cookieString, currentTime)
 	if err != nil {
-		return Session{}, err
+		return models.Session{}, err
 	}
 
-	return Session{
+	return models.Session{
 		Uuid:         sessionUUID,
 		Email:        user.Email,
 		UserId:       user.Id,
@@ -44,8 +46,8 @@ func (dm *DatabaseManager) CreateSession(user *User) (Session, error) {
 	}, nil
 }
 
-func (dm *DatabaseManager) ValidateSession(sessionUUID string) (Session, bool, error) {
-	var session Session
+func (dm *DatabaseManager) ValidateSession(sessionUUID string) (models.Session, bool, error) {
+	var session models.Session
 
 	// Calculate current time as hour*100 + minute
 	now := time.Now()
@@ -82,8 +84,8 @@ func (dm *DatabaseManager) ValidateSession(sessionUUID string) (Session, bool, e
 	return session, false, nil
 }
 
-func (dm *DatabaseManager) GetSessionByCookie(cookieValue string) (Session, error) {
-	var session Session
+func (dm *DatabaseManager) GetSessionByCookie(cookieValue string) (models.Session, error) {
+	var session models.Session
 	err := dm.db.QueryRow("SELECT id, uuid, email, user_id, created_at, cookie_string, active_last FROM sessions WHERE cookie_string=?", cookieValue).
 		Scan(&session.Id, &session.Uuid, &session.Email, &session.UserId, &session.CreatedAt, &session.CookieString, &session.ActiveLast)
 	return session, err
@@ -110,15 +112,15 @@ func (dm *DatabaseManager) DeleteAllSessions() error {
 	return err
 }
 
-func (dm *DatabaseManager) GetSessionUser(userID int) (User, error) {
-	var user User
+func (dm *DatabaseManager) GetSessionUser(userID int) (models.User, error) {
+	var user models.User
 	err := dm.db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id=?", userID).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt)
 	return user, err
 }
 
-func (dm *DatabaseManager) GetUserDislikedThreads(userID int) ([]ThreadDislikes, error) {
-	var dislikes []ThreadDislikes
+func (dm *DatabaseManager) GetUserDislikedThreads(userID int) ([]models.ThreadDislikes, error) {
+	var dislikes []models.ThreadDislikes
 	rows, err := dm.db.Query("SELECT type, user_id, thread_id FROM threaddislikes WHERE user_id=?", userID)
 	if err != nil {
 		return dislikes, err
@@ -126,7 +128,7 @@ func (dm *DatabaseManager) GetUserDislikedThreads(userID int) ([]ThreadDislikes,
 	defer rows.Close()
 
 	for rows.Next() {
-		var dislike ThreadDislikes
+		var dislike models.ThreadDislikes
 		err = rows.Scan(&dislike.Type, &dislike.UserId, &dislike.ThreadId)
 		if err != nil {
 			continue
@@ -136,8 +138,8 @@ func (dm *DatabaseManager) GetUserDislikedThreads(userID int) ([]ThreadDislikes,
 	return dislikes, nil
 }
 
-func (dm *DatabaseManager) GetUserDislikedPosts(userID int) ([]Dislikes, error) {
-	var dislikes []Dislikes
+func (dm *DatabaseManager) GetUserDislikedPosts(userID int) ([]models.Dislikes, error) {
+	var dislikes []models.Dislikes
 	rows, err := dm.db.Query("SELECT type, user_id, post_id FROM dislikes WHERE user_id=?", userID)
 	if err != nil {
 		return dislikes, err
@@ -145,7 +147,7 @@ func (dm *DatabaseManager) GetUserDislikedPosts(userID int) ([]Dislikes, error) 
 	defer rows.Close()
 
 	for rows.Next() {
-		var dislike Dislikes
+		var dislike models.Dislikes
 		err = rows.Scan(&dislike.Type, &dislike.UserId, &dislike.PostId)
 		if err != nil {
 			continue

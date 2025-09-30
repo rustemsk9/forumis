@@ -3,11 +3,11 @@ package routes
 import (
 	"context"
 	"fmt"
+	"forum/internal/data"
+	"forum/models"
+	"forum/utils"
 	"log"
 	"net/http"
-
-	"forum/data"
-	"forum/utils"
 )
 
 type ContextKey string // ContextKey types for different context values
@@ -150,16 +150,16 @@ func GetDatabaseManager(r *http.Request) *data.DatabaseManager {
 }
 
 // GetCurrentUser retrieves authenticated user from context
-func GetCurrentUser(r *http.Request) *data.User {
-	if user, ok := r.Context().Value(UserKey).(data.User); ok {
+func GetCurrentUser(r *http.Request) *models.User {
+	if user, ok := r.Context().Value(UserKey).(models.User); ok {
 		return &user
 	}
 	return nil
 }
 
 // GetCurrentSession retrieves session from context
-func GetCurrentSession(r *http.Request) *data.Session {
-	if session, ok := r.Context().Value(SessionKey).(data.Session); ok {
+func GetCurrentSession(r *http.Request) *models.Session {
+	if session, ok := r.Context().Value(SessionKey).(models.Session); ok {
 		return &session
 	}
 	return nil
@@ -171,7 +171,7 @@ func IsAuthenticated(r *http.Request) bool {
 }
 
 // SessionCheck checks if user has valid session (for backward compatibility)
-func SessionCheck(w http.ResponseWriter, r *http.Request) (*data.Session, error) {
+func SessionCheck(w http.ResponseWriter, r *http.Request) (*models.Session, error) {
 	session := GetCurrentSession(r)
 	if session == nil {
 		return nil, fmt.Errorf("no valid session")

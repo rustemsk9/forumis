@@ -5,7 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
-	"forum/data"
+	"forum/internal"
 	"forum/utils"
 )
 
@@ -33,7 +33,7 @@ func ReadThreadsFromAccount(writer http.ResponseWriter, request *http.Request) {
 			return
 		}
 
-		templateData, err := data.ReadDMFromAccount(URLIDConv)
+		templateData, err := internal.ReadDMFromAccount(URLIDConv)
 		if err != nil {
 			utils.BadRequest(writer, request, "Failed to from Account")
 			return

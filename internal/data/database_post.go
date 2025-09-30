@@ -1,6 +1,10 @@
 package data
 
-import "time"
+import (
+	"forum/models"
+	"forum/utils"
+	"time"
+)
 
 func (dm *DatabaseManager) GetTotalPostsCount() (int, error) {
 	var count int
@@ -10,7 +14,7 @@ func (dm *DatabaseManager) GetTotalPostsCount() (int, error) {
 
 func (dm *DatabaseManager) CreatePostByUser(body string, userID, threadID int) (int64, error) {
 	result, err := dm.db.Exec("INSERT INTO posts(uuid, body, user_id, thread_id, created_at) VALUES(?, ?, ?, ?, ?)",
-		createUUID(), body, userID, threadID, time.Now())
+		utils.CreateUUID(), body, userID, threadID, time.Now())
 	if err != nil {
 		return 0, err
 	}
@@ -18,8 +22,8 @@ func (dm *DatabaseManager) CreatePostByUser(body string, userID, threadID int) (
 }
 
 // Additional methods needed by account routes
-func (dm *DatabaseManager) GetUserCreatedPosts(userID int) ([]Post, error) {
-	var posts []Post
+func (dm *DatabaseManager) GetUserCreatedPosts(userID int) ([]models.Post, error) {
+	var posts []models.Post
 	rows, err := dm.db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM posts WHERE user_id=? ORDER BY created_at DESC", userID)
 	if err != nil {
 		return posts, err
@@ -27,7 +31,7 @@ func (dm *DatabaseManager) GetUserCreatedPosts(userID int) ([]Post, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var post Post
+		var post models.Post
 		err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
 		if err != nil {
 			continue
@@ -47,7 +51,7 @@ func (dm *DatabaseManager) GetUserCreatedPosts(userID int) ([]Post, error) {
 }
 
 // GetPostsByUserID returns all posts created by a specific user
-func (dm *DatabaseManager) GetPostsByUserID(userID int) ([]Post, error) {
+func (dm *DatabaseManager) GetPostsByUserID(userID int) ([]models.Post, error) {
 	rows, err := dm.db.Query(`
 		SELECT p.id, p.uuid, p.body, p.user_id, p.thread_id, p.created_at, u.name
 		FROM posts p 
@@ -59,9 +63,9 @@ func (dm *DatabaseManager) GetPostsByUserID(userID int) ([]Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []Post
+	var posts []models.Post
 	for rows.Next() {
-		var post Post
+		var post models.Post
 		err := rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId,
 			&post.ThreadId, &post.CreatedAt, &post.User)
 		if err != nil {
@@ -78,7 +82,7 @@ func (dm *DatabaseManager) GetPostsByUserID(userID int) ([]Post, error) {
 }
 
 // GetLikedPostsByUserID returns all posts liked by a specific user
-func (dm *DatabaseManager) GetLikedPostsByUserID(userID int) ([]Post, error) {
+func (dm *DatabaseManager) GetLikedPostsByUserID(userID int) ([]models.Post, error) {
 	rows, err := dm.db.Query(`
 		SELECT p.id, p.uuid, p.body, p.user_id, p.thread_id, p.created_at, u.name
 		FROM posts p 
@@ -91,9 +95,9 @@ func (dm *DatabaseManager) GetLikedPostsByUserID(userID int) ([]Post, error) {
 	}
 	defer rows.Close()
 
-	var posts []Post
+	var posts []models.Post
 	for rows.Next() {
-		var post Post
+		var post models.Post
 		err := rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId,
 			&post.ThreadId, &post.CreatedAt, &post.User)
 		if err != nil {
@@ -109,8 +113,8 @@ func (dm *DatabaseManager) GetLikedPostsByUserID(userID int) ([]Post, error) {
 	return posts, rows.Err()
 }
 
-func (dm *DatabaseManager) GetThreadPosts(threadID int) ([]Post, error) {
-	var posts []Post
+func (dm *DatabaseManager) GetThreadPosts(threadID int) ([]models.Post, error) {
+	var posts []models.Post
 	rows, err := dm.db.Query("SELECT id, uuid, body, user_id, thread_id, created_at FROM posts WHERE thread_id=?", threadID)
 	if err != nil {
 		return posts, err
@@ -118,7 +122,7 @@ func (dm *DatabaseManager) GetThreadPosts(threadID int) ([]Post, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var post Post
+		var post models.Post
 		err = rows.Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
 		if err != nil {
 			continue
@@ -145,7 +149,7 @@ func (dm *DatabaseManager) CreatePost(threadID int, body string, userID int) (in
 	}
 	defer stmt.Close()
 
-	uuid := createUUID()
+	uuid := utils.CreateUUID()
 	result, err := stmt.Exec(uuid, body, userID, threadID, time.Now())
 	if err != nil {
 		return 0, err
@@ -156,8 +160,8 @@ func (dm *DatabaseManager) CreatePost(threadID int, body string, userID int) (in
 }
 
 // Post like/dislike operations
-func (dm *DatabaseManager) GetLikes(postID int) ([]Likes, error) {
-	var likes []Likes
+func (dm *DatabaseManager) GetLikes(postID int) ([]models.Likes, error) {
+	var likes []models.Likes
 	rows, err := dm.db.Query("SELECT type, user_id, post_id FROM likedposts WHERE post_id=?", postID)
 	if err != nil {
 		return likes, err
@@ -166,7 +170,7 @@ func (dm *DatabaseManager) GetLikes(postID int) ([]Likes, error) {
 
 	var likeLength int
 	for rows.Next() {
-		var like Likes
+		var like models.Likes
 		likeLength++
 		if err = rows.Scan(&like.Type, &like.UserId, &like.PostId); err != nil {
 			continue
@@ -180,8 +184,8 @@ func (dm *DatabaseManager) GetLikes(postID int) ([]Likes, error) {
 	return likes, nil
 }
 
-func (dm *DatabaseManager) GetDislikes(postID int) ([]Dislikes, error) {
-	var dislikes []Dislikes
+func (dm *DatabaseManager) GetDislikes(postID int) ([]models.Dislikes, error) {
+	var dislikes []models.Dislikes
 	rows, err := dm.db.Query("SELECT type, user_id, post_id FROM dislikes WHERE post_id=?", postID)
 	if err != nil {
 		return dislikes, err
@@ -190,7 +194,7 @@ func (dm *DatabaseManager) GetDislikes(postID int) ([]Dislikes, error) {
 
 	var dislikeLength int
 	for rows.Next() {
-		var dislike Dislikes
+		var dislike models.Dislikes
 		dislikeLength++
 		if err = rows.Scan(&dislike.Type, &dislike.UserId, &dislike.PostId); err != nil {
 			continue
@@ -205,7 +209,7 @@ func (dm *DatabaseManager) GetDislikes(postID int) ([]Dislikes, error) {
 }
 
 // GetLikedThreadsByUserID returns all threads liked by a specific user
-func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]Thread, error) {
+func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]models.Thread, error) {
 	rows, err := dm.db.Query(`
 		SELECT t.id, t.uuid, t.topic, t.body, t.user_id, u.name, u.email, 
 		       t.created_at, t.category1,
@@ -225,9 +229,9 @@ func (dm *DatabaseManager) GetLikedThreadsByUserID(userID int) ([]Thread, error)
 	}
 	defer rows.Close()
 
-	var threads []Thread
+	var threads []models.Thread
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body,
 			&thread.UserId, &thread.User, &thread.Email,
 			&thread.CreatedAt, &thread.Category1, &thread.NumReplies)
@@ -258,8 +262,8 @@ func (dm *DatabaseManager) PrepareDislikedPosts(userID, postID int) bool {
 }
 
 // Post operations
-func (dm *DatabaseManager) GetPostUser(postUserId int) (User, error) {
-	var user User
+func (dm *DatabaseManager) GetPostUser(postUserId int) (models.User, error) {
+	var user models.User
 	err := dm.db.QueryRow("SELECT id, uuid, name, email, created_at FROM users WHERE id=?", postUserId).
 		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.CreatedAt)
 	return user, err
@@ -333,8 +337,8 @@ func (dm *DatabaseManager) SmartApplyPostDislike(userID, postID int) error {
 }
 
 // Get a post by ID
-func (dm *DatabaseManager) GetPostByID(id int) (Post, error) {
-	var post Post
+func (dm *DatabaseManager) GetPostByID(id int) (models.Post, error) {
+	var post models.Post
 	err := dm.db.QueryRow("SELECT id, uuid, body, user_id, thread_id, created_at FROM posts WHERE id=?", id).
 		Scan(&post.Id, &post.Uuid, &post.Body, &post.UserId, &post.ThreadId, &post.CreatedAt)
 	return post, err
@@ -378,8 +382,8 @@ func (dm *DatabaseManager) AddPostDislike(userID int, postID int) error {
 	return err
 }
 
-func (dm *DatabaseManager) GetPostLikes(postID int) ([]Likes, error) {
-	var likes []Likes
+func (dm *DatabaseManager) GetPostLikes(postID int) ([]models.Likes, error) {
+	var likes []models.Likes
 	rows, err := dm.db.Query("SELECT type, user_id, post_id FROM likedposts WHERE post_id=?", postID)
 	if err != nil {
 		return likes, err
@@ -387,7 +391,7 @@ func (dm *DatabaseManager) GetPostLikes(postID int) ([]Likes, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var like Likes
+		var like models.Likes
 		err = rows.Scan(&like.Type, &like.UserId, &like.PostId)
 		if err != nil {
 			continue
@@ -397,8 +401,8 @@ func (dm *DatabaseManager) GetPostLikes(postID int) ([]Likes, error) {
 	return likes, nil
 }
 
-func (dm *DatabaseManager) GetPostDislikes(postID int) ([]Dislikes, error) {
-	var dislikes []Dislikes
+func (dm *DatabaseManager) GetPostDislikes(postID int) ([]models.Dislikes, error) {
+	var dislikes []models.Dislikes
 	rows, err := dm.db.Query("SELECT type, user_id, post_id FROM dislikes WHERE post_id=?", postID)
 	if err != nil {
 		return dislikes, err
@@ -406,7 +410,7 @@ func (dm *DatabaseManager) GetPostDislikes(postID int) ([]Dislikes, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var dislike Dislikes
+		var dislike models.Dislikes
 		err = rows.Scan(&dislike.Type, &dislike.UserId, &dislike.PostId)
 		if err != nil {
 			continue

@@ -4,15 +4,16 @@ import (
 	"context"
 	"encoding/json"
 	"fmt"
+	"forum/internal"
+	"forum/internal/data"
+	"forum/models"
+	"forum/routes"
+	"forum/utils"
 	"net/http"
 	"os"
 	"os/signal"
 	"strings"
 	"time"
-
-	"forum/data"
-	"forum/routes"
-	"forum/utils"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -52,7 +53,7 @@ func main() {
 	x := os.Args
 	for _, arg := range x {
 		if arg == "--migrate" {
-			if err := data.RunMigrations(dbManager); err != nil {
+			if err := internal.RunMigrations(dbManager); err != nil {
 				utils.Danger("Migration error:", err)
 				return
 			}
@@ -60,7 +61,7 @@ func main() {
 		}
 	}
 
-	data.InitAllDatabaseManagers(dbManager)
+	internal.InitAllDatabaseManagers(dbManager)
 
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(config.Static))
@@ -79,9 +80,9 @@ func main() {
 		routes.WithDatabaseManager(dbManager),
 		routes.WithAuthentication(),
 		routes.RequireAuth(),
-	)
+	) // authChain includes RequireAuth
 
-	dataLS := data.LoginSkin{}
+	dataLS := models.LoginSkin{}
 
 	mux.HandleFunc("/", baseChain(routes.Index))
 	mux.HandleFunc("/err", baseChain(routes.Err))
@@ -147,27 +148,20 @@ func main() {
 		MaxHeaderBytes: 1 << 20,
 	}
 
-	// server.ListenAndServe()
-	// fmt.Println("Server started : on 8080")
-
-	// Setup signal channel
-	stop := make(chan os.Signal, 1)
+	stop := make(chan os.Signal, 1) // Setup signal channel
 	signal.Notify(stop, os.Interrupt)
 
-	// Start server in a goroutine
-	go func() {
+	go func() { // Start server in a goroutine
 		if err := server.ListenAndServe(); err != nil && err != http.ErrServerClosed {
 			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
 	}()
 	fmt.Println("Server started : on", config.Address)
 
-	// Wait for interrupt signal
-	<-stop
+	<-stop // Wait for interrupt signal
 	fmt.Println("Shutting down server...")
 
-	// Create context with timeout for shutdown
-	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second)
+	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // Create context with timeout for shutdown
 	defer cancel()
 
 	if err := server.Shutdown(ctx); err != nil {
@@ -176,8 +170,7 @@ func main() {
 		fmt.Println("Server exited properly")
 	}
 
-	// Close database connection
-	dbManager.Close()
+	dbManager.Close() // Close database connection
 	err = dbManager.Ping()
 	if err != nil {
 		fmt.Println("Database is closed or unreachable:", err)

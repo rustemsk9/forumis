@@ -4,7 +4,7 @@ import (
 	"fmt"
 	"net/http"
 
-	"forum/data"
+	"forum/internal"
 	"forum/utils"
 )
 
@@ -18,7 +18,7 @@ func DebugCookieTest(writer http.ResponseWriter, request *http.Request) {
 	writer.Header().Set("Content-Type", "text/html")
 
 	// Test GetCookieValue function
-	userID := data.GetCookieValue(request)
+	userID := internal.GetCookieValue(request)
 
 	fmt.Fprintf(writer, "<h3>Cookie Debug Information</h3>")
 	fmt.Fprintf(writer, "<p><strong>GetCookieValue() result:</strong> %d</p>", userID)
@@ -37,7 +37,7 @@ func DebugCookieTest(writer http.ResponseWriter, request *http.Request) {
 		fmt.Fprintf(writer, "<p><strong>_cookie value:</strong> %s</p>", cookie.Value)
 
 		// Test session lookup
-		session, err := data.GetSessionByCookie(cookie.Value)
+		session, err := internal.GetSessionByCookie(cookie.Value)
 		if err != nil {
 			fmt.Fprintf(writer, "<p><strong>Session lookup error:</strong> %v</p>", err)
 		} else {

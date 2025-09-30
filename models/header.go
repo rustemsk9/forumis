@@ -1,13 +1,8 @@
-package data
+package models
 
 import (
-	"database/sql"
 	"time"
 )
-
-type DatabaseManager struct {
-	db *sql.DB
-}
 
 type User struct {
 	Id                int
@@ -21,14 +16,6 @@ type User struct {
 	PreferedCategory2 string
 }
 
-type LoginSkin struct {
-	Submit string
-	Signup string
-	Name   string
-	Email  string
-	Error  string
-}
-
 type Session struct {
 	Id           int
 	Uuid         string
@@ -37,6 +24,37 @@ type Session struct {
 	CreatedAt    time.Time
 	CookieString string
 	ActiveLast   int
+}
+
+type Post struct {
+	Id            int
+	Uuid          string
+	Body          string
+	UserId        int
+	ThreadId      int
+	CreatedAt     time.Time
+	FormattedDate string // formatted creation date for template access
+	User          string // User information for template access
+}
+
+type ThreadCounts struct {
+	Likes    int `json:"likes"`
+	Dislikes int `json:"dislikes"`
+}
+
+type ThreadVoteStatus struct {
+	Likes        int  `json:"likes"`
+	Dislikes     int  `json:"dislikes"`
+	UserLiked    bool `json:"userLiked"`
+	UserDisliked bool `json:"userDisliked"`
+}
+
+type LoginSkin struct {
+	Submit string
+	Signup string
+	Name   string
+	Email  string
+	Error  string
 }
 
 type Thread struct {
@@ -103,15 +121,4 @@ type ThreadDislikes struct {
 	ThreadId         int
 	LengthOfDislikes int
 	UserDisliked     bool
-}
-
-type Post struct {
-	Id            int
-	Uuid          string
-	Body          string
-	UserId        int
-	ThreadId      int
-	CreatedAt     time.Time
-	FormattedDate string // formatted creation date for template access
-	User          string // User information for template access
 }

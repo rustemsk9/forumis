@@ -1,20 +1,22 @@
-package data
+package internal
 
 import (
 	"errors"
 	"fmt"
+	"forum/internal/data"
+	"forum/models"
 	"net/http"
 )
 
 // Global DatabaseManager instance for thread operations
-var threadDM *DatabaseManager
+var threadDM *data.DatabaseManager
 
 // InitThreadDM initializes the global DatabaseManager for thread operations
-func InitThreadDM(dm *DatabaseManager) {
+func InitThreadDM(dm *data.DatabaseManager) {
 	threadDM = dm
 }
 
-func (thread *Thread) GetAllThreads() (threads []Thread, err error) {
+func GetAllThreads() (threads []models.Thread, err error) {
 	threads, err = threadDM.GetAllThreads()
 	if err != nil {
 		fmt.Println("Error on select GetAllThreads")
@@ -23,65 +25,65 @@ func (thread *Thread) GetAllThreads() (threads []Thread, err error) {
 	return
 }
 
-func (thread *Thread) FilterThreadsByCategories(category1, category2 string) ([]Thread, error) {
+func FilterThreadsByCategories(category1, category2 string) ([]models.Thread, error) {
 	// We need to add this method to DatabaseManager
 	return threadDM.GetThreadsByCategories(category1, category2)
 }
 
 // Additional functions needed by API routes
-func (thread *Thread) ThreadById(threadID int) (Thread, error) {
+func ThreadById(threadID int) (models.Thread, error) {
 	return threadDM.GetThreadByID(threadID)
 }
 
-func (thread *Thread) GetThreadLikesCount(threadID int) (int, error) {
+func GetThreadLikesCount(threadID int) (int, error) {
 	return threadDM.GetThreadLikesCount(threadID)
 }
 
-func (thread *Thread) GetThreadDislikesCount(threadID int) (int, error) {
+func GetThreadDislikesCount(threadID int) (int, error) {
 	return threadDM.GetThreadDislikesCount(threadID)
 }
 
-func ReadDMFromAccount(URLIDConv int) ([]Thread, error) {
+func ReadDMFromAccount(URLIDConv int) ([]models.Thread, error) {
 	// Get user info first
 	userInfo, err := threadDM.GetUserByID(URLIDConv)
 	if err != nil {
-		return []Thread{}, err
+		return []models.Thread{}, err
 	}
 
 	// Get user's threads
 	userThreads, err := threadDM.GetThreadsByUserID(URLIDConv)
 	if err != nil {
 		fmt.Printf("Error getting user threads: %v\n", err)
-		userThreads = []Thread{} // Empty slice if error
+		userThreads = []models.Thread{} // Empty slice if error
 	}
 
 	// Get user's posts
 	userPosts, err := threadDM.GetPostsByUserID(URLIDConv)
 	if err != nil {
 		fmt.Printf("Error getting user posts: %v\n", err)
-		userPosts = []Post{} // Empty slice if error
+		userPosts = []models.Post{} // Empty slice if error
 	}
 
 	// Get user's liked posts
 	likedPosts, err := threadDM.GetLikedPostsByUserID(URLIDConv)
 	if err != nil {
 		fmt.Printf("Error getting user liked posts: %v\n", err)
-		likedPosts = []Post{} // Empty slice if error
+		likedPosts = []models.Post{} // Empty slice if error
 	}
 
 	// Get user's liked threads
 	likedThreads, err := threadDM.GetLikedThreadsByUserID(URLIDConv)
 	if err != nil {
 		fmt.Printf("Error getting user liked threads: %v\n", err)
-		likedThreads = []Thread{} // Empty slice if error
+		likedThreads = []models.Thread{} // Empty slice if error
 	}
 
 	// Create account data structure that matches the template expectations
 	// The template expects an array where the first element has user info and contains Cards/LikedPosts
-	var templateData []Thread
+	var templateData []models.Thread
 
 	// Always create at least one element for the template
-	var firstElement Thread
+	var firstElement models.Thread
 
 	if len(userThreads) > 0 {
 		// Use the first thread as a base
@@ -93,7 +95,7 @@ func ReadDMFromAccount(URLIDConv int) ([]Thread, error) {
 		}
 	} else {
 		// No threads, create a dummy thread with user info
-		firstElement = Thread{
+		firstElement = models.Thread{
 			User:      userInfo.Name,
 			Email:     userInfo.Email,
 			CreatedAt: userInfo.CreatedAt,
@@ -106,12 +108,12 @@ func ReadDMFromAccount(URLIDConv int) ([]Thread, error) {
 	firstElement.UserLikedThreads = likedThreads
 
 	// Insert the first element at the beginning
-	templateData = append([]Thread{firstElement}, templateData...)
+	templateData = append([]models.Thread{firstElement}, templateData...)
 
 	return templateData, nil
 }
 
-func SortThreadsByLikesDesc(threads []Thread) ([]Thread, error) {
+func SortThreadsByLikesDesc(threads []models.Thread) ([]models.Thread, error) {
 	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
 	n := len(threads)
 	for i := 0; i < n; i++ {
@@ -124,7 +126,7 @@ func SortThreadsByLikesDesc(threads []Thread) ([]Thread, error) {
 	return threads, nil
 }
 
-func SortThreadsByLatest(threads []Thread) ([]Thread, error) {
+func SortThreadsByLatest(threads []models.Thread) ([]models.Thread, error) {
 	// Simple bubble sort for demonstration; consider more efficient sorting for large datasets
 	n := len(threads)
 	for i := 0; i < n; i++ {
@@ -249,7 +251,7 @@ func SmartApplyThreadDislike(userID int, threadID int) error {
 }
 
 // Thread methods needed by API routes
-func (thread *Thread) GetLikesCount() int {
+func GetLikesCount(thread models.Thread) int {
 	likes, err := threadDM.GetThreadLikes(thread.Id)
 	if err != nil {
 		return 0
@@ -257,7 +259,7 @@ func (thread *Thread) GetLikesCount() int {
 	return len(likes)
 }
 
-func (thread *Thread) GetDislikesCount() int {
+func GetDislikesCount(thread models.Thread) int {
 	dislikes, err := threadDM.GetThreadDislikes(thread.Id)
 	if err != nil {
 		return 0

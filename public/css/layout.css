@@ -10,6 +10,7 @@ body {
   margin: 0;
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial,
     sans-serif;
+    
   font-size: 1rem;
   font-weight: 400;
   line-height: 1.5;
@@ -34,6 +35,67 @@ body {
 
 .flex-column {
   flex-direction: column;
+}
+
+/* === CSS Logos for fa-vk, fa-youtube-play, fa-google === */
+/* W3.CSS Social Icon Styles (adapted from w3schools.com/w3css/4/w3.css) */
+
+.anim {
+    font-family: 'Impact', 'Arial Black', 'Segoe UI', Arial, sans-serif;
+    font-weight: 900;
+    animation: pulse 2s infinite;
+}
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+    50% {
+        transform: scale(1.03);
+    }
+    100% {
+        transform: scale(1);
+    }
+}
+/* VK Logo */
+.fa-vk, .w3-vk {
+    color: #fff !important;
+    background-color: #4c75a3 !important;
+    border-radius: 50%;
+    padding: 8px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* YouTube Logo */
+.fa-youtube-play, .fa-youtube, .w3-youtube {
+    color: #fff !important;
+    background-color: #f44336 !important;
+    border-radius: 50%;
+    padding: 8px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    display: inline-block;
+}
+
+/* Google Logo */
+.fa-google, .w3-google {
+    color: #fff !important;
+    background-color: #166b2e !important;
+    border-radius: 50%;
+    padding: 8px;
+    font-size: 24px;
+    width: 40px;
+    height: 40px;
+    text-align: center;
+    vertical-align: middle;
+    display: inline-block;
 }
 
 /* === Background === */

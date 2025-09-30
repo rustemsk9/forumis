@@ -1,12 +1,11 @@
 {{ define "content" }}
 <section style="margin-top: 10px; scroll-behavior: smooth;"></section>
-<a href="/" style="text-decoration: none; color: inherit;"></a>
 <div id="myBtnContainer">
   <a class="medium">{{.Title}}</a><a class="small" id="name"> {{ .User }} </a><br><a class="small">Total users: {{ .Count }}</a> <a class="small"> Users online: {{ .Online }} </a>
 </div>
 <div class="container-lg d-flex flex-column justify-content-center" style="margin-left: 125px;">
-  <p class="lead">
-    <a href="/thread/new" style="text-decoration: underline;">Start a thread </a><a> | or join one below!</a>
+  <p class="lead anim text-break">
+    <a href="/thread/new" style="text-decoration: underline;">Start a thread</a><a> | or join one below!</a>
   </p>
   <form method="post" action="/">
   <select name="selection1" id="selection1" title="Choose">

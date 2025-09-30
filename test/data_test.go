@@ -3,7 +3,9 @@ package test
 import (
 	"testing"
 
-	"forum/data"
+	"forum/internal/data"
+	"forum/models"
+	"forum/utils"
 )
 
 func TestDeleteUserByName(t *testing.T) {
@@ -31,10 +33,10 @@ func TestData(t *testing.T) {
 	defer dm.Close()
 
 	// Create a user using the real struct
-	user := data.User{
+	user := models.User{
 		Name:              "TestUser4",
 		Email:             "test4@example.com",
-		Password:          data.Encrypt("Pass123!@#"),
+		Password:          utils.Encrypt("Pass123!@#"),
 		PreferedCategory1: "AI-theme",
 		PreferedCategory2: "Creativity",
 	}

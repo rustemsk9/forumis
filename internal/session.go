@@ -1,22 +1,27 @@
-package data
+package internal
+
+import (
+	"forum/internal/data"
+	"forum/models"
+)
 
 // session DatabaseManager instance for session operations
-var sessionDM *DatabaseManager
+var sessionDM *data.DatabaseManager
 
 // InitSessionDM initializes the DatabaseManager for session operations
-func InitSessionDM(dm *DatabaseManager) {
+func InitSessionDM(dm *data.DatabaseManager) {
 	sessionDM = dm
 }
 
 // delete session from database
-func (session *Session) DeleteByUUID() (err error) {
-	return sessionDM.DeleteSessionByUUID(session.Uuid)
+func DeleteByUUID(Uuid string) (err error) {
+	return sessionDM.DeleteSessionByUUID(Uuid)
 }
 
-// get the user from the session
-func (session *Session) User() (user User, err error) {
-	return sessionDM.GetSessionUser(session.UserId)
-}
+// // get the user from the session
+// func User(userId int) (userId int, err error) {
+// 	return sessionDM.GetSessionUser(userId)
+// }
 
 // delete all sessions from database
 func SessionDeleteAll() (err error) {
@@ -24,17 +29,17 @@ func SessionDeleteAll() (err error) {
 }
 
 // Update session with cookie string
-func (session *Session) UpdateCookieString(cookieValue string) error {
-	return sessionDM.UpdateSessionCookieString(session.Uuid, cookieValue)
+func UpdateCookieString(Uuid string, cookieValue string) error {
+	return sessionDM.UpdateSessionCookieString(Uuid, cookieValue)
 }
 
 // Get session by cookie string
-func GetSessionByCookie(cookieValue string) (sess Session, err error) {
+func GetSessionByCookie(cookieValue string) (sess models.Session, err error) {
 	return sessionDM.GetSessionByCookie(cookieValue)
 }
 
 // CheckOnlineUsers returns a list of users who have been active recently
 // considerOnline: time difference in minutes to consider a user online (e.g., 5 for 5 minutes)
-func CheckOnlineUsers(considerOnline int) ([]User, error) {
+func CheckOnlineUsers(considerOnline int) ([]models.User, error) {
 	return sessionDM.CheckOnlineUsers(considerOnline)
 }

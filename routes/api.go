@@ -7,21 +7,10 @@ import (
 	"strconv"
 	"strings"
 
-	"forum/data"
+	"forum/internal"
+	"forum/models"
 	"forum/utils"
 )
-
-type ThreadCounts struct {
-	Likes    int `json:"likes"`
-	Dislikes int `json:"dislikes"`
-}
-
-type ThreadVoteStatus struct {
-	Likes        int  `json:"likes"`
-	Dislikes     int  `json:"dislikes"`
-	UserLiked    bool `json:"userLiked"`
-	UserDisliked bool `json:"userDisliked"`
-}
 
 // GET /api/thread/{id}/counts
 func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
@@ -30,8 +19,6 @@ func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	// Extract thread ID from URL path
-	var thread *data.Thread
 	path := request.URL.Path
 	parts := strings.Split(path, "/")
 	if len(parts) < 4 {
@@ -47,19 +34,19 @@ func GetThreadCounts(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Get likes and dislikes count using DatabaseManager
-	likesCount, err := thread.GetThreadLikesCount(threadId)
+	likesCount, err := internal.GetThreadLikesCount(threadId)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return
 	}
 
-	dislikesCount, err := thread.GetThreadDislikesCount(threadId)
+	dislikesCount, err := internal.GetThreadDislikesCount(threadId)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return
 	}
 
-	counts := ThreadCounts{
+	counts := models.ThreadCounts{
 		Likes:    likesCount,
 		Dislikes: dislikesCount,
 	}
@@ -122,7 +109,7 @@ func LikeThread(writer http.ResponseWriter, request *http.Request) {
 	dislikesCount, _ := dbManager.GetThreadDislikesCount(threadId)
 
 	// Return updated counts with vote status
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likesCount,
 		Dislikes:     dislikesCount,
 		UserLiked:    dbManager.HasThreadLiked(user.Id, threadId),
@@ -187,7 +174,7 @@ func DislikeThread(writer http.ResponseWriter, request *http.Request) {
 	dislikesCount, _ := dbManager.GetThreadDislikesCount(threadId)
 
 	// Return updated counts with vote status
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likesCount,
 		Dislikes:     dislikesCount,
 		UserLiked:    dbManager.HasThreadLiked(user.Id, threadId),
@@ -236,7 +223,7 @@ func GetThreadVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	dislikesCount, _ := dbManager.GetThreadDislikesCount(threadId)
 
 	// Return vote status (even for unauthenticated users, just without personal vote info)
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likesCount,
 		Dislikes:     dislikesCount,
 		UserLiked:    user != nil && dbManager.HasThreadLiked(user.Id, threadId),
@@ -322,7 +309,7 @@ func VoteThread(writer http.ResponseWriter, request *http.Request) {
 		userLiked := dbManager.HasThreadLiked(user.Id, threadId)
 		userDisliked := dbManager.HasThreadDisliked(user.Id, threadId)
 
-		response := ThreadVoteStatus{
+		response := models.ThreadVoteStatus{
 			Likes:        likesCount,
 			Dislikes:     dislikesCount,
 			UserLiked:    userLiked,
@@ -401,7 +388,7 @@ func LikePost(writer http.ResponseWriter, request *http.Request) {
 	userLiked, _ := dbManager.HasUserLikedPost(user.Id, postId)
 	userDisliked, _ := dbManager.HasUserDislikedPost(user.Id, postId)
 
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likes,
 		Dislikes:     dislikes,
 		UserLiked:    userLiked,
@@ -468,7 +455,7 @@ func DislikePost(writer http.ResponseWriter, request *http.Request) {
 	userLiked, _ := dbManager.HasUserLikedPost(user.Id, postId)
 	userDisliked, _ := dbManager.HasUserDislikedPost(user.Id, postId)
 
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likes,
 		Dislikes:     dislikes,
 		UserLiked:    userLiked,
@@ -524,7 +511,7 @@ func GetPostVoteStatus(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Return vote status (even for unauthenticated users, just without personal vote info)
-	status := ThreadVoteStatus{
+	status := models.ThreadVoteStatus{
 		Likes:        likes,
 		Dislikes:     dislikes,
 		UserLiked:    userLiked,

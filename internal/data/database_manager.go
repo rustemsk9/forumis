@@ -2,9 +2,14 @@ package data
 
 import (
 	"database/sql"
+	"forum/models"
 
 	_ "github.com/mattn/go-sqlite3"
 )
+
+type DatabaseManager struct {
+	db *sql.DB
+}
 
 func (dm *DatabaseManager) DoExec(query string, args ...interface{}) (sql.Result, error) {
 	return dm.db.Exec(query, args...)
@@ -12,14 +17,6 @@ func (dm *DatabaseManager) DoExec(query string, args ...interface{}) (sql.Result
 
 func (dm *DatabaseManager) Ping() error {
 	return dm.db.Ping()
-}
-
-// InitAllDatabaseManagers initializes all DatabaseManager instances
-func InitAllDatabaseManagers(dm *DatabaseManager) {
-	InitSessionDM(dm)
-	InitStatsDM(dm)
-	InitUserDM(dm)
-	InitThreadDM(dm)
 }
 
 // NewDatabaseManager creates a new database manager
@@ -55,8 +52,8 @@ func (dm *DatabaseManager) GetUserCount() (int, error) {
 	return count, err
 }
 
-func (dm *DatabaseManager) GetMostActiveUsers(limit int) ([]User, error) {
-	var users []User
+func (dm *DatabaseManager) GetMostActiveUsers(limit int) (users []models.User, err error) {
+	var user models.User
 	rows, err := dm.db.Query(`
 		SELECT u.id, u.uuid, u.name, u.email, u.password, u.created_at, COUNT(t.id) AS thread_count
 		FROM users u
@@ -70,7 +67,6 @@ func (dm *DatabaseManager) GetMostActiveUsers(limit int) ([]User, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var user User
 		var threadCount int
 		err = rows.Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &threadCount)
 		if err != nil {

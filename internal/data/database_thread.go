@@ -2,6 +2,8 @@ package data
 
 import (
 	"fmt"
+	"forum/models"
+	"forum/utils"
 	"time"
 )
 
@@ -12,8 +14,8 @@ func (dm *DatabaseManager) GetTotalThreadsCount() (int, error) {
 }
 
 // Thread operations
-func (dm *DatabaseManager) GetAllThreads() ([]Thread, error) {
-	var threads []Thread
+func (dm *DatabaseManager) GetAllThreads() ([]models.Thread, error) {
+	var threads []models.Thread
 
 	rows, err := dm.db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
 	if err != nil {
@@ -22,7 +24,7 @@ func (dm *DatabaseManager) GetAllThreads() ([]Thread, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
 			continue
@@ -47,8 +49,8 @@ func (dm *DatabaseManager) GetAllThreads() ([]Thread, error) {
 }
 
 // Get all threads ordered by likes count (most liked first)
-func (dm *DatabaseManager) GetAllThreadsByLikes() ([]Thread, error) {
-	var threads []Thread
+func (dm *DatabaseManager) GetAllThreadsByLikes() ([]models.Thread, error) {
+	var threads []models.Thread
 
 	query := `SELECT t.id, t.uuid, t.topic, t.user_id, t.created_at, t.category1, t.category2,
 	          COALESCE(like_counts.like_count, 0) as like_count
@@ -67,7 +69,7 @@ func (dm *DatabaseManager) GetAllThreadsByLikes() ([]Thread, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		var likeCount int
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.UserId, &thread.CreatedAt,
 			&thread.Category1, &thread.Category2, &likeCount)
@@ -102,7 +104,7 @@ func (dm *DatabaseManager) CreateThread(topic, body string, userID, categoryID, 
 	}
 	defer stmt.Close()
 
-	uuid := createUUID()
+	uuid := utils.CreateUUID()
 	result, err := stmt.Exec(uuid, topic, body, userID, time.Now(), categoryID, subcategoryID)
 	if err != nil {
 		return 0, err
@@ -112,14 +114,14 @@ func (dm *DatabaseManager) CreateThread(topic, body string, userID, categoryID, 
 	return threadID, err
 }
 
-func (dm *DatabaseManager) GetThreadByID(id int) (Thread, error) {
-	var thread Thread
+func (dm *DatabaseManager) GetThreadByID(id int) (models.Thread, error) {
+	var thread models.Thread
 	err := dm.db.QueryRow("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE id = ?", id).Scan(
 		&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 	return thread, err
 }
 
-func (dm *DatabaseManager) GetThreadWithPosts(id int) (Thread, error) {
+func (dm *DatabaseManager) GetThreadWithPosts(id int) (models.Thread, error) {
 	// First get the thread
 	thread, err := dm.GetThreadByID(id)
 	if err != nil {
@@ -148,8 +150,8 @@ func (dm *DatabaseManager) GetThreadWithPosts(id int) (Thread, error) {
 	return thread, nil
 }
 
-func (dm *DatabaseManager) GetThreadLikes(threadID int) ([]ThreadLikes, error) {
-	var likes []ThreadLikes
+func (dm *DatabaseManager) GetThreadLikes(threadID int) ([]models.ThreadLikes, error) {
+	var likes []models.ThreadLikes
 	rows, err := dm.db.Query("SELECT * FROM threadlikes WHERE thread_id=?", threadID)
 	if err != nil {
 		return likes, err
@@ -157,7 +159,7 @@ func (dm *DatabaseManager) GetThreadLikes(threadID int) ([]ThreadLikes, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var like ThreadLikes
+		var like models.ThreadLikes
 		err = rows.Scan(&like.Type, &like.UserId, &like.ThreadId)
 		if err != nil {
 			continue
@@ -167,8 +169,8 @@ func (dm *DatabaseManager) GetThreadLikes(threadID int) ([]ThreadLikes, error) {
 	return likes, nil
 }
 
-func (dm *DatabaseManager) GetThreadDislikes(threadID int) ([]ThreadDislikes, error) {
-	var dislikes []ThreadDislikes
+func (dm *DatabaseManager) GetThreadDislikes(threadID int) ([]models.ThreadDislikes, error) {
+	var dislikes []models.ThreadDislikes
 	rows, err := dm.db.Query("SELECT * FROM threaddislikes WHERE thread_id=?", threadID)
 	if err != nil {
 		return dislikes, err
@@ -176,7 +178,7 @@ func (dm *DatabaseManager) GetThreadDislikes(threadID int) ([]ThreadDislikes, er
 	defer rows.Close()
 
 	for rows.Next() {
-		var dislike ThreadDislikes
+		var dislike models.ThreadDislikes
 		err = rows.Scan(&dislike.Type, &dislike.UserId, &dislike.ThreadId)
 		if err != nil {
 			continue
@@ -314,8 +316,8 @@ func (dm *DatabaseManager) ApplyDislikes(userID, postID int) error {
 }
 
 // Thread retrieval methods
-func (dm *DatabaseManager) GetThreads() ([]Thread, error) {
-	var threads []Thread
+func (dm *DatabaseManager) GetThreads() ([]models.Thread, error) {
+	var threads []models.Thread
 	rows, err := dm.db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads ORDER BY created_at DESC")
 	if err != nil {
 		return threads, err
@@ -323,7 +325,7 @@ func (dm *DatabaseManager) GetThreads() ([]Thread, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
 			continue
@@ -402,15 +404,15 @@ func (dm *DatabaseManager) GetThreadPostCount(threadID int) (int, error) {
 // User management methods needed by user.go
 func (dm *DatabaseManager) CreateThreadByUser(topic, body string, userID int, category1, category2 string) (int64, error) {
 	result, err := dm.db.Exec("INSERT INTO threads(uuid, topic, body, user_id, created_at, category1, category2) VALUES(?, ?, ?, ?, ?, ?, ?)",
-		createUUID(), topic, body, userID, time.Now(), category1, category2)
+		utils.CreateUUID(), topic, body, userID, time.Now(), category1, category2)
 	if err != nil {
 		return 0, err
 	}
 	return result.LastInsertId()
 }
 
-func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
-	var threads []Thread
+func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]models.Thread, error) {
+	var threads []models.Thread
 	rows, err := dm.db.Query("SELECT id, uuid, topic, body, user_id, created_at, category1, category2 FROM threads WHERE user_id=? ORDER BY created_at DESC", userID)
 	if err != nil {
 		return threads, err
@@ -418,7 +420,7 @@ func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
 	defer rows.Close()
 
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
 			fmt.Println("Error scanning thread for Account:", err)
@@ -449,8 +451,8 @@ func (dm *DatabaseManager) GetUserCreatedThreads(userID int) ([]Thread, error) {
 	return threads, nil
 }
 
-func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) ([]Thread, error) {
-	var threads []Thread
+func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) ([]models.Thread, error) {
+	var threads []models.Thread
 	var query string
 	var args []interface{}
 
@@ -475,7 +477,7 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 	defer rows.Close()
 
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err = rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body, &thread.UserId, &thread.CreatedAt, &thread.Category1, &thread.Category2)
 		if err != nil {
 			continue
@@ -498,7 +500,7 @@ func (dm *DatabaseManager) GetThreadsByCategories(category1, category2 string) (
 }
 
 // GetThreadsByUserID returns all threads created by a specific user
-func (dm *DatabaseManager) GetThreadsByUserID(userID int) ([]Thread, error) {
+func (dm *DatabaseManager) GetThreadsByUserID(userID int) ([]models.Thread, error) {
 	rows, err := dm.db.Query(`
 		SELECT t.id, t.uuid, t.topic, t.body, t.user_id, u.name, u.email, 
 		       t.created_at, t.category1,
@@ -517,9 +519,9 @@ func (dm *DatabaseManager) GetThreadsByUserID(userID int) ([]Thread, error) {
 	}
 	defer rows.Close()
 
-	var threads []Thread
+	var threads []models.Thread
 	for rows.Next() {
-		var thread Thread
+		var thread models.Thread
 		err := rows.Scan(&thread.Id, &thread.Uuid, &thread.Topic, &thread.Body,
 			&thread.UserId, &thread.User, &thread.Email,
 			&thread.CreatedAt, &thread.Category1, &thread.NumReplies)
