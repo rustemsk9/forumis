@@ -83,13 +83,13 @@ func main() {
 			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
 	}()
-	fmt.Println("Server started on -> localhost:8080\nPress Ctrl+C to stop\n")
+	fmt.Println("Server started on -> localhost:8080\nPress Ctrl+C to stop")
 
 	<-stop // Wait for interrupt signal
 	fmt.Println("Shutting down server...")
 
 	ctx, cancel := context.WithTimeout(context.Background(), 5*time.Second) // Create context with timeout for shutdown
-	defer cancel()
+	defer cancel()                                                          // Ensure cancel is called to free resources
 
 	if err := server.Shutdown(ctx); err != nil {
 		fmt.Printf("Server Shutdown Failed:%+v\n", err)
