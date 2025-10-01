@@ -21,7 +21,7 @@ COPY . .
 
 # Build the application with CGO enabled for SQLite
 RUN CGO_ENABLED=1 GOOS=linux \
-    go build -ldflags="-s -w" -o forum .
+    go build -ldflags="-s -w" -o forum cmd/main.go
 
 # Runtime stage
 FROM debian:bullseye-slim
