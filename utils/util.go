@@ -17,7 +17,7 @@ import (
 var logger *log.Logger
 
 func init() {
-	file, err := os.OpenFile("casual-talk.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
+	file, err := os.OpenFile("../casual-talk.log", os.O_CREATE|os.O_WRONLY|os.O_APPEND, 0666)
 	if err != nil {
 		log.Fatalln("Failed to open log file", err)
 	}
@@ -88,6 +88,16 @@ func ParseTemplateFiles(filenames ...string) (t *template.Template) {
 }
 
 func GenerateHTML(writer http.ResponseWriter, data interface{}, fn ...string) {
+
+	funcMap := template.FuncMap{
+		"safeHTML": func(s string) template.HTML {
+			return template.HTML(s) // Marks the string as safe HTML (no escaping)
+		},
+		// Add more functions here if needed, e.g., "upper": strings.ToUpper
+	}
+	// Create a new template with functions
+	tmpl := template.New("").Funcs(funcMap)
+
 	var files []string
 	for _, file := range fn {
 		files = append(files, fmt.Sprintf("templates/%s.html", file))
@@ -95,8 +105,11 @@ func GenerateHTML(writer http.ResponseWriter, data interface{}, fn ...string) {
 	// Always include cookie-consent and lidi templates
 	files = append(files, "templates/cookie-consent.html")
 	// files = append(files, "templates/lidi.html")
-	templates := template.Must(template.ParseFiles(files...))
-	templates.ExecuteTemplate(writer, "layout", data)
+	template := template.Must(tmpl.ParseFiles(files...))
+	err := template.ExecuteTemplate(writer, "layout", data)
+	if err != nil {
+		Danger("Failed to execute template:", err)
+	}
 }
 
 // convenience function to redirect to the error message page
@@ -206,6 +219,13 @@ func writeJSONError(writer http.ResponseWriter, code int, message string) {
 		},
 	}
 	json.NewEncoder(writer).Encode(response)
+}
+
+func FileExists(fileName string) bool {
+	if _, err := os.Stat(fileName); os.IsNotExist(err) {
+		return false
+	}
+	return true
 }
 
 // log

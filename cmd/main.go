@@ -5,14 +5,11 @@ import (
 	"encoding/json"
 	"fmt"
 	"forum/internal"
-	"forum/internal/data"
-	"forum/models"
 	"forum/routes"
 	"forum/utils"
 	"net/http"
 	"os"
 	"os/signal"
-	"strings"
 	"time"
 
 	_ "github.com/mattn/go-sqlite3"
@@ -43,9 +40,9 @@ func init() {
 }
 
 func main() {
-	dbManager, err := data.NewDatabaseManager("pkg/mydb.db")
+	dbManager, err := internal.ConnectDB("pkg", "mydb.db")
 	if err != nil {
-		utils.Danger("Cannot initialize database manager", err)
+		utils.Danger("Cannot connect to database", err)
 		return
 	}
 	defer dbManager.Close()
@@ -62,82 +59,9 @@ func main() {
 	}
 
 	internal.InitAllDatabaseManagers(dbManager)
-
 	mux := http.NewServeMux()
 	files := http.FileServer(http.Dir(config.Static))
-	mux.Handle("/static/", http.StripPrefix("/static/", files))
-
-	baseChain := routes.Chain(
-		routes.WithErrorRecovery(),
-		routes.WithLogging(),
-		routes.WithDatabaseManager(dbManager), // if we turn off this option, 500 error occurs in auth and login, since no dbmanager in context
-		routes.WithAuthentication(),
-	)
-
-	authChain := routes.Chain(
-		routes.WithErrorRecovery(),
-		routes.WithLogging(),
-		routes.WithDatabaseManager(dbManager),
-		routes.WithAuthentication(),
-		routes.RequireAuth(),
-	) // authChain includes RequireAuth
-
-	dataLS := models.LoginSkin{}
-
-	mux.HandleFunc("/", baseChain(routes.Index))
-	mux.HandleFunc("/err", baseChain(routes.Err))
-	mux.HandleFunc("/login/", baseChain(func(w http.ResponseWriter, r *http.Request) {
-		routes.Login(w, r, dataLS)
-	}))
-	mux.HandleFunc("/signup", baseChain(func(w http.ResponseWriter, r *http.Request) {
-		routes.Signup(w, r, dataLS)
-	}))
-	mux.HandleFunc("/authenticate", baseChain(routes.Authenticate))
-	mux.HandleFunc("/logout", baseChain(routes.Logout))
-
-	mux.HandleFunc("/thread/new", authChain(routes.NewThread))
-	mux.HandleFunc("/thread/create", authChain(routes.CreateThread))
-	mux.HandleFunc("/thread/post", authChain(routes.PostThread))
-
-	mux.HandleFunc("/thread/read", baseChain(routes.ReadThread))
-	mux.HandleFunc("/account", baseChain(routes.ReadThreadsFromAccount))
-	mux.HandleFunc("/accountcheck", baseChain(routes.AccountCheck))
-	mux.HandleFunc("/debug", baseChain(routes.DebugPage))
-
-	mux.HandleFunc("/back/", baseChain(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		if strings.HasPrefix(path, "/back/thread/") {
-			if strings.HasSuffix(path, "/counts") {
-				routes.GetThreadCounts(w, r)
-			} else if strings.HasSuffix(path, "/status") {
-				routes.GetThreadVoteStatus(w, r)
-			} else if strings.HasSuffix(path, "/vote") {
-				routes.VoteThread(w, r)
-			} else {
-				utils.NotFound(w, r)
-			}
-		} else if strings.HasPrefix(path, "/back/") {
-			if !strings.HasSuffix(path, "/back") {
-				utils.NotFound(w, r)
-			}
-		}
-	}))
-	mux.HandleFunc("/api/", baseChain(func(w http.ResponseWriter, r *http.Request) {
-		path := r.URL.Path
-		if strings.HasPrefix(path, "/api/post/") {
-			if strings.HasSuffix(path, "/like") {
-				routes.LikePost(w, r)
-			} else if strings.HasSuffix(path, "/dislike") {
-				routes.DislikePost(w, r)
-			} else if strings.HasSuffix(path, "/status") {
-				routes.GetPostVoteStatus(w, r)
-			} else {
-				utils.NotFound(w, r)
-			}
-		} else {
-			utils.NotFound(w, r)
-		}
-	}))
+	routes.CompleteRoutes(mux, files, dbManager)
 
 	server := &http.Server{
 		Addr:           config.Address,
@@ -146,7 +70,11 @@ func main() {
 		WriteTimeout:   time.Duration(config.WriteTimeout * int64(time.Second)),
 		MaxHeaderBytes: 1 << 20,
 	}
-
+	server.Handler = http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		w.Header().Set("Cache-Control", "immutable, max-age=360")
+		w.Header().Set("X-Content-Type-Options", "nosniff")
+		mux.ServeHTTP(w, r)
+	})
 	stop := make(chan os.Signal, 1) // Setup signal channel
 	signal.Notify(stop, os.Interrupt)
 
@@ -155,7 +83,7 @@ func main() {
 			fmt.Printf("ListenAndServe error: %v\n", err)
 		}
 	}()
-	fmt.Println("Server started : on", config.Address)
+	fmt.Println("Server started on -> localhost:8080\nPress Ctrl+C to stop\n")
 
 	<-stop // Wait for interrupt signal
 	fmt.Println("Shutting down server...")

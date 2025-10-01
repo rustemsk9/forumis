@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net/http"
 	"strconv"
+	"strings"
 
 	"forum/internal"
 	"forum/models"
@@ -54,6 +55,9 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 
 	topic := request.PostFormValue("topic")
 	body := request.PostFormValue("body")
+	body = strings.ReplaceAll(body, "\r\n", "\n")
+	body = strings.ReplaceAll(body, "\r", "\n")
+	body = strings.ReplaceAll(body, "\\n", "\n")
 	selected := request.PostFormValue("selection1")
 	selected2 := request.PostFormValue("selection2")
 

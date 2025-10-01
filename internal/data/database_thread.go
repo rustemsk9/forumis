@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"forum/models"
 	"forum/utils"
+	"strings"
 	"time"
 )
 
@@ -145,6 +146,15 @@ func (dm *DatabaseManager) GetThreadWithPosts(id int) (models.Thread, error) {
 		thread.Email = ""
 		thread.CreatedAtDate = thread.CreatedAt.Format("Jan 2, 2006 at 15:04")
 	}
+
+	// Post-process thread.Body and thread.Topic for HTML display
+	// Replace \n with <br> for line breaks, \t with 4 non-breaking spaces for indentation
+
+	thread.Body = strings.ReplaceAll(thread.Body, "\n", "<br>")
+	thread.Body = strings.ReplaceAll(thread.Body, "    ", "&nbsp;&nbsp;&nbsp;&nbsp;")
+	// Optional: Do the same for Topic if it contains newlines/tabs
+	// thread.Topic = strings.ReplaceAll(thread.Topic, "\n", "<br>")
+	// thread.Topic = strings.ReplaceAll(thread.Topic, "\t", "&nbsp;&nbsp;&nbsp;&nbsp;")
 
 	thread.Cards = posts
 	return thread, nil

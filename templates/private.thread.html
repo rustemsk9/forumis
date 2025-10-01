@@ -13,7 +13,7 @@
       </div>
       <i>Text</i>
         <div style="background-color: wheat" class="text-break card">
-            <text class="lead">&#128172; {{ .Body }}</text>
+            <text class="lead">&#128172; {{ .Body | safeHTML }}</text>
         </div>
         <br>
         </div>
@@ -38,8 +38,8 @@
 
 
   
-  <i class="fa fa-comment me-2 text-break" style="font-size: 16px; cursor: pointer;"><a>&#128172;</a
-  > {{ .Body }}</i>
+  <text class="fa fa-comment me-2 text-break" style="font-size: 16px; cursor: pointer;"><a>&#128172;</a
+  > {{ .Body | safeHTML }}</text>
     <div
       class="d-flex justify-content-between align-items-center me-2 border rounded"
     >

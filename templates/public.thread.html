@@ -5,12 +5,12 @@
   <div id="starter"></div>
   <div class="panel panel-default">
       <i>Topic</i>
-      <div style="background-color: wheat" class="card-header lead text-break bg-light d-flex">
+      <div style="background-color: wheat;" class="card-header lead text-break bg-light">
         <i class="lead">{{ .Topic }}</i><br>
       </div>
       <i>Text</i>
-        <div style="background-color: wheat; font-size: 16px; cursor: pointer;" class="text-break card">
-          <i>&#128172; {{ .Body }}</i>
+        <div style="background-color: wheat;" class="text-break card">
+           <text class="lead">&#128172; {{ .Body | safeHTML }}</text>
         </div>
         <br>
         </div>
@@ -32,8 +32,8 @@
       point.push(identify);
     </script>
 
-  <i class="fa fa-comment me-2 text-break" style="font-size: 16px; cursor: pointer;"><a>&#128172;</a
-  > {{ .Body }}</i>
+  <text class="fa fa-comment me-2 text-break" style="font-size: 16px; cursor: pointer;"><a>&#128172;</a
+  > {{ .Body | safeHTML }}</text>
     <div
       class="d-flex justify-content-between align-items-center me-2 border rounded"
     >

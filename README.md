@@ -1,4 +1,10 @@
 #Forum Talk - 2025 - rsatimov
+Origin remote git - https://github.com/rustemsk9/forumis
+Commits - also https://github.com/rustemsk9/forumis
+
+## Initial info: 
+    go 1.24.6
+    because docker uses 1.24.6 in bullseye:linux
 
 ## How to run
 
@@ -17,7 +23,7 @@ You can also build the project using:
 
     OR
 
-    go build -o forum cmd/main.go && ./main --migrate
+    go build -o forum cmd/main.go && ./forum --migrate
 ```
 
 ## How to run in Docker
@@ -26,17 +32,40 @@ You can also build the project using:
     We have special runserver.sh (in root folder)
 
 ```sh
-    ./runserver.sh
+    ./rundocker.sh
 ```
 
+##
+## Project Structure
+
+```
+forumis/
+├── cmd/
+│   └── main.go
+├── internal/ - entity .go files
+|   ├──────────── data
+│   │             └─── database_*.go - includes all sqlite3 commands
+│   ├── thread.go 
+│   ├── post.go
+│   ├── user.go
+│   └── session.go
+├── routes/ - mux handlers
+├── utils/ - project utils
+├── runserver.sh - docker image build, container deploy, clear on reset.
+├── layout.css - for /templates
+├── go.mod
+├── go.sum
+└── README.md
+```
 ## Architecture Overview
 
 This is a Go-based forum application with a traditional web server architecture:
 
-- `data/` package contains database models and operations (Thread, Post, User, Session)
+- `internal/data` package contains database models and operations (Thread, Post, User, Session)
 - Direct SQL database operations using `database/sql` with prepared statements
-- Session-based authentication using HTTP cookies (`_cookie`)
+- Session-based authentication using HTTP cookies (`_cookie`) and (`sessions`)
 - Like/dislike system for both threads and posts with separate tables
+- Middleware: ex. baseChain := Chain() , authChain := Chain()
 
 ## SQL Key observed
 

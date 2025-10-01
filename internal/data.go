@@ -2,8 +2,11 @@ package internal
 
 import (
 	"fmt"
+	"os"
+	"path/filepath"
 
 	"forum/internal/data"
+	"forum/utils"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -18,6 +21,36 @@ func InitAllDatabaseManagers(dm *data.DatabaseManager) {
 }
 
 // RunMigrations ensures that all required tables are present.
+
+func ConnectDB(dir string, fileName string) (*data.DatabaseManager, error) {
+	isNewDB := !utils.FileExists(filepath.Join(dir, fileName))
+	if isNewDB {
+		err := os.MkdirAll(dir, os.ModePerm)
+		if err != nil {
+			return nil, err
+		}
+	}
+
+	dbManager, err := data.NewDatabaseManager("pkg/mydb.db")
+	if err != nil {
+		utils.Danger("Cannot initialize database manager", err)
+		return nil, err
+	}
+
+	err = dbManager.Ping()
+	if err != nil {
+		return nil, err
+	}
+
+	if isNewDB {
+		fmt.Println("Database file not found, running migrations to create a new database.")
+		if err := RunMigrations(dbManager); err != nil {
+			utils.Danger("Migration error:", err)
+			return nil, err
+		}
+	}
+	return dbManager, nil
+}
 
 func RunMigrations(db *data.DatabaseManager) error {
 	stmts := []string{
