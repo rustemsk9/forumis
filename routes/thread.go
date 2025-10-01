@@ -151,13 +151,15 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	body := request.PostFormValue("body")
+
 	id := request.PostFormValue("id")
 
 	// Validate required fields
-	if body == "" {
-		utils.BadRequest(writer, request, "Post body is required")
+	if strings.TrimSpace(body) == "" {
+		utils.BadRequest(writer, request, "Comment body is required")
 		return
 	}
+
 	if id == "" {
 		utils.BadRequest(writer, request, "Thread ID is required")
 		return

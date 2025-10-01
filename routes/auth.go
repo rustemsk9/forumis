@@ -3,6 +3,7 @@ package routes
 import (
 	"fmt"
 	"net/http"
+	"strings"
 	"time"
 
 	"forum/internal"
@@ -103,6 +104,19 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	// Validate username format
 	name := request.PostFormValue("name")
 	email := request.PostFormValue("email")
+	checkemail := strings.Split(email, ".")
+	if len(checkemail) < 2 || len(checkemail) > 2 {
+		Error = "Wrong Email format"
+		user := models.LoginSkin{
+			Submit: "Try Again",
+			Signup: "Signup",
+			Name:   name,
+			Email:  email,
+			Error:  Error,
+		}
+		utils.GenerateHTML(writer, &user, "login.layout", "public.navbar", "signup")
+		return
+	}
 	if len(name) == 0 || (len(name) > 0 && name[0] == ' ') || len(name) > 20 || len(name) < 3 {
 		user := models.LoginSkin{
 			Submit: "Try Again",

@@ -98,3 +98,5 @@
 [ERROR] 2025/09/30 23:54:27 util.go:219: Internal server error: Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
 [ERROR] 2025/09/30 23:54:58 util.go:219: Internal server error: no such table: threads
 [ERROR] 2025/09/30 23:55:00 util.go:219: Internal server error: no such table: threads
+[ERROR] 2025/10/02 00:49:54 util.go:239: Cannot connect to database Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub
+[ERROR] 2025/10/02 00:51:28 util.go:240: Cannot connect to database Binary was compiled with 'CGO_ENABLED=0', go-sqlite3 requires cgo to work. This is a stub

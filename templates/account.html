@@ -22,7 +22,7 @@
       <div class="panel-heading">
         <span class="lead text-break">
           <i class="fa fa-comment-o"></i>
-          {{ if .Topic }}&#x1F4D6; {{ .Topic }}{{ else }}{{ .Topic }}{{ end }}
+          {{ if .Topic }} &#x1F4D6; {{ .Topic | safeHTML }} {{ end }}
         </span>
       </div>
       <div
@@ -51,7 +51,7 @@
       <div class="panel-heading">
         <span class="lead text-break">
           <i class="fa fa-heart text-danger"></i>
-          &#x1F49C; {{ .Topic }}
+          {{ if .Topic }} &#x1F49C; {{ .Topic | safeHTML }} {{ end }}
         </span>
       </div>
       <div

@@ -235,6 +235,7 @@ func Info(args ...interface{}) {
 }
 
 func Danger(args ...interface{}) {
+	fmt.Println("[ERROR]", fmt.Sprintf("%v", args...))
 	logger.SetPrefix("[ERROR] ")
 	logger.Println(args...)
 }
