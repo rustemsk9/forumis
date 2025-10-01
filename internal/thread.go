@@ -30,6 +30,13 @@ func FilterThreadsByCategories(category1, category2 string) ([]models.Thread, er
 	return threadDM.GetThreadsByCategories(category1, category2)
 }
 
+func ThreadWithPosts(threadID int) (models.Thread, error) {
+	return threadDM.GetThreadWithPosts(threadID)
+}
+func CrThreadByUser(topic, body string, userID int, category1, category2 string) (int64, error) {
+	return threadDM.CreateThreadByUser(topic, body, userID, category1, category2)
+}
+
 // Additional functions needed by API routes
 func ThreadById(threadID int) (models.Thread, error) {
 	return threadDM.GetThreadByID(threadID)
@@ -206,6 +213,36 @@ func RemoveThreadLike(userID int, threadID int) error {
 // Remove user's dislike from a thread
 func RemoveThreadDislike(userID int, threadID int) error {
 	return threadDM.RemoveThreadDislike(userID, threadID)
+}
+
+func PrepareThreadLikedPosts(userID, threadid int) bool {
+	likes, err := userDM.GetUserLikedThreads(userID)
+	if err != nil {
+		fmt.Println("Error on PrepareThreadLikedPosts")
+		return false
+	}
+
+	for _, like := range likes {
+		if like.ThreadId == threadid {
+			return true
+		}
+	}
+	return false
+}
+
+func PrepareThreadDislikedPosts(userID, threadid int) bool {
+	dislikes, err := userDM.GetUserDislikedThreads(userID)
+	if err != nil {
+		fmt.Println("Error on PrepareThreadDislikedPosts")
+		return false
+	}
+
+	for _, dislike := range dislikes {
+		if dislike.ThreadId == threadid {
+			return true
+		}
+	}
+	return false
 }
 
 // Smart like function - handles vote switching

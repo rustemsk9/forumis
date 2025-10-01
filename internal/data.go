@@ -10,6 +10,7 @@ import (
 
 // InitAllDatabaseManagers initializes all DatabaseManager instances
 func InitAllDatabaseManagers(dm *data.DatabaseManager) {
+	InitPostDM(dm)
 	InitSessionDM(dm)
 	InitStatsDM(dm)
 	InitUserDM(dm)

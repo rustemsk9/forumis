@@ -1,39 +1,79 @@
 {{define "cookie-consent"}}
-<div id="cookie-consent" style="position: fixed; bottom: 0; left: 0; right: 0; background: #333; color: white; padding: 15px; text-align: center; z-index: 1000; display: none;">
-    <p style="margin: 0 0 10px 0;">
-        This website uses cookies to ensure you get the best experience on our website.
-        <a href="https://ru.wikipedia.org/wiki/Cookie" style="color: #fff; text-decoration: underline;">Learn more</a>
-    </p>
-    <button onclick="acceptCookies()" style="background: #007bff; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer; margin-right: 10px;">
-        Accept
-    </button>
-    <button onclick="declineCookies()" style="background: #6c757d; color: white; border: none; padding: 8px 16px; border-radius: 4px; cursor: pointer;">
-        Decline
-    </button>
+<div
+  id="cookie-consent"
+  style="
+    position: fixed;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #333;
+    color: white;
+    padding: 15px;
+    text-align: center;
+    z-index: 1000;
+    display: none;
+  "
+>
+  <p style="margin: 0 0 10px 0">
+    This website uses cookies to ensure you get the best experience on our
+    website.
+    <a
+      href="https://ru.wikipedia.org/wiki/Cookie"
+      style="color: #fff; text-decoration: underline"
+      >Learn more</a
+    >
+  </p>
+  <button
+    onclick="acceptCookies()"
+    style="
+      background: #007bff;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      margin-right: 10px;
+    "
+  >
+    Accept
+  </button>
+  <button
+    onclick="declineCookies()"
+    style="
+      background: #6c757d;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+    "
+  >
+    Decline
+  </button>
 </div>
 
 <script>
-function checkCookieConsent() {
-    const consent = localStorage.getItem('cookieConsent');
+  function checkCookieConsent() {
+    const consent = localStorage.getItem("cookieConsent");
     if (!consent) {
-        document.getElementById('cookie-consent').style.display = 'block';
+      document.getElementById("cookie-consent").style.display = "block";
     }
-}
+  }
 
-function acceptCookies() {
-    localStorage.setItem('cookieConsent', 'accepted');
-    document.getElementById('cookie-consent').style.display = 'none';
+  function acceptCookies() {
+    localStorage.setItem("cookieConsent", "accepted");
+    document.getElementById("cookie-consent").style.display = "none";
     // Enable cookies for the browser
-    document.cookie = "cookieConsent=accepted; path=/; max-age=" + (365 * 24 * 60 * 60);
-}
+    document.cookie = "cookieConsent=accepted; path=/; max-age=" + 24 * 60 * 60;
+  }
 
-function declineCookies() {
-    localStorage.setItem('cookieConsent', 'declined');
-    document.getElementById('cookie-consent').style.display = 'none';
+  function declineCookies() {
+    localStorage.setItem("cookieConsent", "declined");
+    document.getElementById("cookie-consent").style.display = "none";
     // Optionally redirect to a page explaining limited functionality
-}
+  }
 
-// Check consent when page loads
-document.addEventListener('DOMContentLoaded', checkCookieConsent);
+  // Check consent when page loads
+  document.addEventListener("DOMContentLoaded", checkCookieConsent);
 </script>
 {{end}}

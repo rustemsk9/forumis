@@ -58,7 +58,7 @@
           <span class="lead"><i class="fa fa-comments-o"> {{ .Topic }}</i></span>
         </div>
         <div class="card-footer p-2">
-          <div class="small mb-2">Started by <a class="medium" href="/account?user_id={{.UserId}}" style="text-decoration: underline;">{{ .User }}</a> - {{ .CreatedAtDate }} - {{ .NumReplies }} posts.</div>
+          <div class="small mb-2">Started by <a class="medium" href="/account?user_id={{.UserId}}" style="text-decoration: underline;">{{ .User }}</a> - {{ .CreatedAtDate }}<br>{{ .NumReplies }} posts.</div>
           <div class="d-flex align-items-center">
             <div class="btn-group" role="group">
               {{ if ne .User "" }}

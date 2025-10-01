@@ -11,7 +11,7 @@ type DatabaseManager struct {
 	db *sql.DB
 }
 
-func (dm *DatabaseManager) DoExec(query string, args ...interface{}) (sql.Result, error) {
+func (dm *DatabaseManager) DoExec(query string, args ...any) (sql.Result, error) {
 	return dm.db.Exec(query, args...)
 }
 

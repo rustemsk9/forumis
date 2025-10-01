@@ -5,19 +5,19 @@
 Starting options
 
 ```sh
-    go run .
+    go run cmd/main.go
     OR
-    go run . --migrate (to start empty database)
+    go run cmd/main.go --migrate (to start empty database)
 ```
 
 You can also build the project using:
 
 ```sh
-    go build . && ./forum
+    go build -o forum cmd/main.go && ./forum
 
     OR
 
-    go build . && ./forum --migrate
+    go build -o forum cmd/main.go && ./main --migrate
 ```
 
 ## How to run in Docker

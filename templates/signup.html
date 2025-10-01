@@ -1,6 +1,6 @@
 {{ define "content" }}
 
-<form class="form-signin" role="form" action="/signup_account" method="post">
+<form class="form-signin" role="form" action="/signup" method="post">
   <h2 class="form-signin-heading">
     <i class="fa fa-comments-o">
       <a href="/">Forum Talk</a>
@@ -35,6 +35,6 @@
   <button class="btn btn-lg btn-primary btn-block" type="submit">
     {{ if .Signup }}{{ .Signup }}{{ else }}Signup{{ end }}
   </button>
+  <pre>{{ .Error }}</pre>
 </form>
-<pre style="margin-left: 180px">{{ .Error }}</pre>
 {{ end }}

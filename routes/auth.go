@@ -53,43 +53,44 @@ func Login(writer http.ResponseWriter, request *http.Request, LS models.LoginSki
 // GET /signup
 // show the signup page
 func Signup(writer http.ResponseWriter, request *http.Request, LS models.LoginSkin) {
-	if request.Method != "GET" {
-		utils.MethodNotAllowed(writer, request, "GET method only")
+	switch request.Method {
+	case "GET":
+		if Error != "" {
+			LS = models.LoginSkin{
+				Submit: "Submit",
+				Signup: "Again",
+				Name:   LS.Name,
+				Email:  LS.Email,
+				Error:  Error,
+			}
+		} else {
+			LS = models.LoginSkin{
+				Submit: "Submit",
+				Signup: "Signup",
+				Name:   LS.Name,
+				Email:  LS.Email,
+				Error:  "",
+			}
+		}
+		Error = ""
+		utils.GenerateHTML(writer, &LS, "public.navbar", "login.layout", "signup")
+	case "POST":
+		// Generate a UUID for the signup process (optional, for tracking or CSRF protection)
+		// uuid := utils.GenerateUUID() // Implement this function if needed
+		// You can pass uuid to SignupAccount or store it in context/session if required
+		SignupAccount(writer, request)
 		return
+	default:
+		utils.MethodNotAllowed(writer, request, "GET or POST method only")
 	}
-	// var LS LoginSkin
-	if Error != "" {
-		LS = models.LoginSkin{
-			Submit: "Submit",
-			Signup: "Again",
-			Name:   LS.Name,
-			Email:  LS.Email,
-			Error:  Error,
-		}
-	} else {
-		LS = models.LoginSkin{
-			Submit: "Submit",
-			Signup: "Signup",
-			Name:   LS.Name,
-			Email:  LS.Email,
-			Error:  "",
-		}
-	}
-	Error = ""
-	utils.GenerateHTML(writer, &LS, "login.layout", "public.navbar", "signup")
 }
 
 // POST /signup_account
 // create the user account
 func SignupAccount(writer http.ResponseWriter, request *http.Request) {
+
 	if request.Method != "POST" {
 		utils.MethodNotAllowed(writer, request, "POST method only")
-		return
-	}
-
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -99,6 +100,33 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
+	// Validate username format
+	name := request.PostFormValue("name")
+	email := request.PostFormValue("email")
+	if len(name) == 0 || (len(name) > 0 && name[0] == ' ') || len(name) > 20 || len(name) < 3 {
+		user := models.LoginSkin{
+			Submit: "Try Again",
+			Signup: "Signup",
+			Name:   name,
+			Email:  email,
+			Error:  "Wrong UserName format",
+		}
+		utils.GenerateHTML(writer, &user, "login.layout", "public.navbar", "signup")
+		return
+	}
+	for _, ch := range name {
+		if ch == ' ' || ch < 33 || ch > 121 {
+			user := models.LoginSkin{
+				Submit: "Try Again",
+				Signup: "Signup",
+				Name:   name,
+				Email:  email,
+				Error:  "Wrong UserName format",
+			}
+			utils.GenerateHTML(writer, &user, "login.layout", "public.navbar", "signup")
+			return
+		}
+	}
 	// Check if user already exists
 	checkExists := internal.IfUserExist(request.PostFormValue("email"), request.PostFormValue("name"))
 	if checkExists {
@@ -110,7 +138,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 			Email:  request.PostFormValue("email"),
 			Error:  Error,
 		}
-		Signup(writer, request, user)
+		utils.GenerateHTML(writer, &user, "login.layout", "public.navbar", "signup")
 		return
 	}
 
@@ -123,7 +151,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 			Email:  request.PostFormValue("email"),
 			Error:  Error,
 		}
-		Signup(writer, request, user)
+		utils.GenerateHTML(writer, &user, "login.layout", "public.navbar", "signup")
 		return
 	}
 
@@ -134,7 +162,7 @@ func SignupAccount(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Use database manager to create user
-	if err := dbManager.CreateUser(&usertoSign); err != nil {
+	if err := internal.CreateUser(usertoSign); err != nil {
 		utils.InternalServerError(writer, request, err)
 		return
 	}

@@ -18,11 +18,6 @@ func DeleteByUUID(Uuid string) (err error) {
 	return sessionDM.DeleteSessionByUUID(Uuid)
 }
 
-// // get the user from the session
-// func User(userId int) (userId int, err error) {
-// 	return sessionDM.GetSessionUser(userId)
-// }
-
 // delete all sessions from database
 func SessionDeleteAll() (err error) {
 	return sessionDM.DeleteAllSessions()
@@ -42,4 +37,11 @@ func GetSessionByCookie(cookieValue string) (sess models.Session, err error) {
 // considerOnline: time difference in minutes to consider a user online (e.g., 5 for 5 minutes)
 func CheckOnlineUsers(considerOnline int) ([]models.User, error) {
 	return sessionDM.CheckOnlineUsers(considerOnline)
+}
+
+func SessionByUUID(uuid string) bool {
+	// This function seems to check if a session exists with the given UUID
+	// Using the DatabaseManager to check session validity
+	_, valid, _ := sessionDM.ValidateSession(uuid)
+	return valid
 }

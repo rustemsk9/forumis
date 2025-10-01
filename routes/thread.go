@@ -5,6 +5,7 @@ import (
 	"net/http"
 	"strconv"
 
+	"forum/internal"
 	"forum/models"
 	"forum/utils"
 )
@@ -30,12 +31,6 @@ func NewThread(writer http.ResponseWriter, request *http.Request) {
 func CreateThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
 		utils.MethodNotAllowed(writer, request, "POST method only")
-		return
-	}
-	// Get database manager from context
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -77,7 +72,7 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 	}
 
 	// Use CreateThreadByUser which accepts string categories
-	idTo, err := dbManager.CreateThreadByUser(topic, body, currentUser.Id, selected, selected2)
+	idTo, err := internal.CrThreadByUser(topic, body, currentUser.Id, selected, selected2)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return
@@ -91,12 +86,6 @@ func CreateThread(writer http.ResponseWriter, request *http.Request) {
 func ReadThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "GET" {
 		utils.MethodNotAllowed(writer, request, "GET method only")
-		return
-	}
-	// Get database manager from context
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -116,7 +105,7 @@ func ReadThread(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	thread, err = dbManager.GetThreadWithPosts(resid)
+	thread, err = internal.ThreadWithPosts(resid)
 	if err != nil {
 		// Check if it's a "not found" error vs other database errors
 		if err.Error() == "sql: no rows in result set" {
@@ -140,12 +129,6 @@ func ReadThread(writer http.ResponseWriter, request *http.Request) {
 func PostThread(writer http.ResponseWriter, request *http.Request) {
 	if request.Method != "POST" {
 		utils.MethodNotAllowed(writer, request, "POST method only")
-		return
-	}
-	// Get database manager from context
-	dbManager := GetDatabaseManager(request)
-	if dbManager == nil {
-		utils.InternalServerError(writer, request, fmt.Errorf("database connection unavailable"))
 		return
 	}
 
@@ -182,7 +165,7 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	thread, err := dbManager.GetThreadByID(threadID)
+	thread, err := internal.ThreadById(threadID)
 	if err != nil {
 		if err.Error() == "sql: no rows in result set" {
 			utils.NotFound(writer, request)
@@ -192,7 +175,7 @@ func PostThread(writer http.ResponseWriter, request *http.Request) {
 		return
 	}
 
-	_, err = dbManager.CreatePost(thread.Id, body, currentUser.Id)
+	_, err = internal.CreatePost(thread.Id, body, currentUser.Id)
 	if err != nil {
 		utils.InternalServerError(writer, request, err)
 		return

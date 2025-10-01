@@ -33,6 +33,15 @@ func (dm *DatabaseManager) CreateUser(user *models.User) error {
 	return nil
 }
 
+func (dm *DatabaseManager) DeleteUserById(user *models.User) error {
+	if user.Id == 0 {
+		return fmt.Errorf("invalid user ID")
+	}
+
+	_, err := dm.db.Exec("DELETE FROM users WHERE id=?", user.Id)
+	return err
+}
+
 func (dm *DatabaseManager) CheckUserExists(email, name string) (bool, error) {
 	var count int
 	err := dm.db.QueryRow("SELECT COUNT(*) FROM users WHERE email = ? OR name = ?", email, name).Scan(&count)
@@ -111,6 +120,12 @@ func (dm *DatabaseManager) CheckOnlineUsers(considerOnline int) ([]models.User, 
 	return users, nil
 }
 
+// update user information in the database
+func (dm *DatabaseManager) Update(userName string, userId int) (err error) {
+	_, err = dm.db.Exec("UPDATE users SET name=? WHERE id=?", userName, userId)
+	return err
+}
+
 // Alternative method names for compatibility with thread.go
 func (dm *DatabaseManager) HasUserLikedThread(userID, threadID int) int {
 	var count int
@@ -138,8 +153,41 @@ func (dm *DatabaseManager) GetUserByUUID(uuid string) (models.User, error) {
 }
 
 func (dm *DatabaseManager) DeleteUserByID(userID int) error {
-	_, err := dm.db.Exec("DELETE FROM users WHERE id=?", userID)
-	return err
+	result, err := dm.db.Exec("DELETE FROM users WHERE id=?", userID)
+	if err != nil {
+		return err
+	}
+	// LastInsertId is not meaningful for DELETE operations; it only applies to INSERT.
+	// For DELETE, you can use RowsAffected to check how many rows were deleted.
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no user found with id %d", userID)
+	}
+	return nil
+}
+
+func (dm *DatabaseManager) DeleteUserByName(name string) error {
+	result, err := dm.DoExec("DELETE FROM users WHERE name=?", name)
+	if err != nil {
+		return err
+	}
+	rowsAffected, err := result.RowsAffected()
+	if err != nil {
+		return err
+	}
+	if rowsAffected == 0 {
+		return fmt.Errorf("no user found with name %s", name)
+	}
+	return nil
+}
+
+func (dm *DatabaseManager) GetUserByName(name string) (user models.User, err error) {
+	err = dm.db.QueryRow("SELECT id, uuid, name, email, password, created_at, prefered_category1, prefered_category2 FROM users WHERE name=?", name).
+		Scan(&user.Id, &user.Uuid, &user.Name, &user.Email, &user.Password, &user.CreatedAt, &user.PreferedCategory1, &user.PreferedCategory2)
+	return user, err
 }
 
 func (dm *DatabaseManager) DeleteAllUsers() error {
