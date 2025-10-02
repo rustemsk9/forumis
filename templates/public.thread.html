@@ -6,11 +6,11 @@
   <div class="panel panel-default">
       <i>Topic</i>
       <div style="background-color: wheat;" class="card-header lead text-break bg-light">
-        <i class="lead">{{ .Topic }}</i><br>
+        <i class="lead">{{ .Topic | safeHTML}}</i><br>
       </div>
       <i>Text</i>
         <div style="background-color: wheat;" class="text-break card">
-           <text class="lead">&#128172; {{ .Body | safeHTML }}</text>
+           <text class="lead me-3">&#128172; {{ .Body | safeHTML }}</text>
         </div>
         <br>
         </div>

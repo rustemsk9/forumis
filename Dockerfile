@@ -49,7 +49,7 @@ COPY --from=builder /app/config/config.json ./config/config.json
 COPY --from=builder /app/pkg/mydb.db ./pkg/mydb.db
 
 # Copy database setup files if they exist
-COPY --from=builder /app/internal/setup.sql ./internal/setup.sql
+COPY --from=builder /app/pkg/setup.sql ./pkg/setup.sql
 
 # Create internal directory and set permissions
 RUN mkdir -p /app/internal && \

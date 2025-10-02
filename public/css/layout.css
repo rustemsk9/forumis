@@ -248,6 +248,11 @@ a {
   margin-right: 0.5rem;
 }
 
+.me-3 {
+  margin-right: 0.8rem;
+  margin-left: 0.8rem;
+}
+
 .g-4 > * {
   padding: 1.5rem;
 }
